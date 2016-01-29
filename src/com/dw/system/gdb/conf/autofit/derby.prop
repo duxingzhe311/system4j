@@ -1,0 +1,1 @@
+select_identity=values IDENTITY_VAL_LOCAL()

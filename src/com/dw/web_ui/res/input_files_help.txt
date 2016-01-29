@@ -1,0 +1,125 @@
+<script>
+<!--
+var attachId = 1 ;
+var curAddAttachDlg = null ;
+var curAddAttachDiv = null ;
+var curAttachBlock = null ;
+var curAttachObj = null ;
+var curAttachFileId = null ;
+//var curTarget = null ;
+//准备插入图片
+function AddAttachment()
+{//alert("--MyWebEditor_InsertImgPre");
+	curAddAttachDlg = document.getElementById('insert_attach_dlg') ;
+	curAddAttachDiv = document.getElementById('AttachDiv') ;
+	
+	//alert(curAddAttachDiv.innerHTML) ;
+	
+	insertDlg = curAddAttachDlg;
+	
+    curAttachBlock = document.createElement ("div") ;
+    
+    curAttachObj = window.document.createElement ("input") ;
+    curAttachFileId = "AttachFile_" + attachId ;
+    curAttachObj.id = curAttachFileId;
+    curAttachObj.type = "file" ;
+    curAttachObj.name = curAttachFileId ;
+    //alert(curAttachObj.name) ;
+    attachId += 1 ;
+    curAttachBlock.appendChild (curAttachObj) ;
+    curAttachBlock.appendChild(window.document.createElement("br")) ;
+
+    curAddAttachDiv.appendChild (curAttachBlock) ;
+
+    insertDlg.style.top = document.getElementById('attach_div').scrollLeft+100;
+    insertDlg.style.left = document.getElementById('attach_div').scrollTop+100 ;
+    
+    insertDlg.style.display = "" ;
+}
+
+function AddAttachOk()
+{
+    if(curAttachBlock!=null&&curAttachObj!=null&&curAttachObj.value!=null&&curAttachObj.value!="")
+    {//alert("ci=="+curAttachObj.value+" curt="+curTarget);
+        
+        var path = curAttachObj.value ;
+        
+        
+        var ps = document.getElementById("attach_paths") ;
+        var att = document.createElement ("div") ;
+        att.id = "Dis_"+curAttachFileId ;
+        att.innerHTML = path +"&nbsp;<a href=\"javascript:RemoveAttach(\'"+curAttachFileId+"\')\">排除</a>";
+        //alert(att.innerHTML);
+        ps.appendChild(att) ;
+        
+        curAttachBlock.style.display="none";
+        curAddAttachDlg.style.display = "none";
+        
+        curAttachBlock = null ;
+        curAttachObj = null ;
+    }
+    
+}
+
+function RemoveAttach(attachfid)
+{
+    var af = document.getElementById(attachfid) ;
+    if(af!=null)
+    {
+        af.parentNode.removeChild(af) ;
+    }
+    
+    var daf = document.getElementById("Dis_"+attachfid) ;
+    if(daf!=null)
+    {
+        daf.parentNode.removeChild(daf) ;
+    }
+}
+
+function RemoveInnerAttach(divid)
+{
+    var af = document.getElementById(divid) ;
+    if(af!=null)
+    {
+        af.parentNode.removeChild(af) ;
+    }
+}
+
+function RemoveDocFileAttach(divid)
+{
+    var af = document.getElementById(divid) ;
+    if(af!=null)
+    {
+        af.parentNode.removeChild(af) ;
+    }
+}
+
+//取消插入图片
+function AddAttachCancel()
+{//alert("MyWebEditor_InsertImgCancel") ;
+    if(curAddAttachDlg!=null&&curAddAttachDiv!=null&&curAttachBlock!=null)
+    {
+        curAddAttachDiv.removeChild(curAttachBlock) ;
+        curAddAttachDlg.style.display="none";
+    }
+    
+    curAddAttachDlg = null ;
+	curAddAttachDiv = null ;
+    curAttachBlock = null ;
+    curAttachObj = null ;
+}
+//-->
+</script>
+<table border='0' class="float" bgcolor="#ffcc66" style="display:none;Z-INDEX:999;position:absolute;" id="insert_attach_dlg">
+    <tr>
+    <td>
+        <div id=AttachDiv>&nbsp;</div>
+    </td>
+    </tr>
+    <tr>
+    <td>
+    <input type="button" name="accept_sm" value="Ok" onclick="AddAttachOk()"/>&nbsp;
+    <input type="button" name="not_accept_sm" value="Cancel" onclick="AddAttachCancel()"/>
+    </td>
+    </tr>
+</table>

@@ -1,0 +1,774 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Gdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://jasonzhu/db_xml_conf.xsd">
+  <Var name="#UserCols" value="UserId,UserName,Domain,State,FullName,CnName,EnName,Email,BelongToOrgNodeId,CreationDate,LastLoginDate,LastActivityDate,UsbKeyTxt,UsbKeyEncType,ExtInfo" />
+  <Var name="#U.UserCols" value="u.UserId,u.UserName,u.Domain,u.State,u.FullName,u.CnName,u.EnName,u.Email,u.BelongToOrgNodeId,u.CreationDate,u.LastLoginDate,u.LastActivityDate,u.UsbKeyTxt,u.UsbKeyEncType,u.ExtInfo" />
+  <Var name="#RoleCols" value="RoleId,RoleName,RoleTitle,RoleDesc,RoleType,RoleExtInfo" />
+  <Var name="#R.RoleCols" value="r.RoleId,r.RoleName,r.RoleTitle,r.RoleDesc,r.RoleType,r.RoleExtInfo" />
+  <Var name="#OrgCols" value="OrgNodeId,OrgNodeName,OrgNodeTitle,OrgNodeDesc,OrgNodeOrder,OrgNodeParentId" />
+  <Var name="#O.OrgCols" value="o.OrgNodeId,o.OrgNodeName,o.OrgNodeTitle,o.OrgNodeDesc,o.OrgNodeOrder,o.OrgNodeParentId" />
+  
+  
+  <Install_For_DB table_name="security_users">
+    <Sql>
+      create table security_users(UserId varchar(30) PRIMARY KEY,
+      UserName varchar(200) not null,Domain integer default 0,State integer default 0,FullName varchar(100) default '',CnName varchar(100) default '',EnName varchar(100) default '',
+      Email varchar(256),BelongToOrgNodeId varchar(30),
+      UserPsw varchar(256),ResetPsw varchar(256) default '',PasswordEncryptType varchar(20),
+      CreationDate TIMESTAMP,LastLoginDate TIMESTAMP,LastActivityDate TIMESTAMP,UsbKeyTxt varchar(200),UsbKeyEncType varchar(10),
+      ExtInfo LONG VARCHAR,ProExtInfo BLOB)
+    </Sql>
+    <Sql>create index idx_security_users_username on security_users (UserName)</Sql>
+    <Sql>ALTER TABLE security_users ADD CONSTRAINT ct_security_users_username UNIQUE (UserName)</Sql>
+    <Sql>insert into security_users (UserId,UserName,CnName,UserPsw) values ('1','root','root','root')</Sql>
+
+    <Sql>
+      create table security_roles(RoleId varchar(30) PRIMARY KEY,
+      RoleName varchar(250) not null,RoleTitle varchar(250),RoleDesc varchar(400),RoleType integer default 0,RoleExtInfo varchar(400))
+    </Sql>
+    <Sql>create UNIQUE index idx_security_roles_rolename on security_roles (RoleName)</Sql>
+    <Sql>insert into security_roles (RoleId,RoleName,RoleDesc) values ('1','root','system super administrator')</Sql>
+    <Sql>insert into security_roles (RoleId,RoleName,RoleDesc) values ('2','guest','guest users')</Sql>
+    <Sql>insert into security_roles (RoleId,RoleName,RoleDesc) values ('3','sub_orgnode_mgr','orgnode sub manager')</Sql>
+
+    <Sql>CREATE TABLE security_usersinroles (UserName varchar(200) not null,RoleId varchar(30) not null)</Sql>
+    <Sql>alter table security_usersinroles ADD CONSTRAINT PK_security_UsersInRoles PRIMARY KEY(UserName,RoleId)</Sql>
+    <!-- 
+    <Sql>
+      ALTER TABLE security_usersinroles ADD CONSTRAINT FK_security_UsersInRoles_RoleId FOREIGN KEY
+      (RoleId) REFERENCES security_roles (RoleId) ON DELETE CASCADE
+    </Sql>
+     -->
+    <Sql>insert into security_usersinroles (UserName,RoleId) values ('root','1')</Sql>
+
+    <Sql>
+      create table security_org(OrgNodeId varchar(30) PRIMARY KEY,
+      OrgNodeName varchar(200) not null,OrgNodeTitle varchar(250),OrgNodeDesc varchar(400) default '',OrgNodeOrder integer default 0,OrgNodeParentId varchar(30))
+    </Sql>
+    <Sql>CREATE TABLE security_usersinorgs (UserName varchar(200) not null,OrgNodeId varchar(30) not null)</Sql>
+    <Sql>alter table security_usersinorgs ADD CONSTRAINT PK_security_UsersInOrgs PRIMARY KEY(UserName,OrgNodeId)</Sql>
+    <!-- 
+    <Sql>ALTER TABLE security_usersinorgs ADD CONSTRAINT FK_security_UsersInOrgs_username FOREIGN KEY (UserName) REFERENCES security_users (UserName) ON DELETE CASCADE</Sql>
+    <Sql>ALTER TABLE security_usersinorgs ADD CONSTRAINT FK_security_UsersInOrgs_OrgNodeId FOREIGN KEY (OrgNodeId) REFERENCES security_org (OrgNodeId) ON DELETE CASCADE</Sql>
+     -->
+  </Install_For_DB>
+  <Install_For_DB db_type="mysql" table_name="security_users">
+    <Sql>
+      create table security_users(UserId varchar(30) PRIMARY KEY,
+      UserName varchar(200) not null,Domain integer default 0,State integer default 0,FullName varchar(100) default '',CnName varchar(100) default '',EnName varchar(100) default '',
+      Email varchar(100),BelongToOrgNodeId varchar(30),
+      UserPsw varchar(256),ResetPsw varchar(256) default '',PasswordEncryptType varchar(20),
+      CreationDate datetime,LastLoginDate datetime,LastActivityDate datetime,UsbKeyTxt varchar(200),UsbKeyEncType varchar(10),
+      ExtInfo text,ProExtInfo BLOB) ENGINE=InnoDB
+    </Sql>
+    <Sql tablename="security_users">create index idx_security_users_username on security_users (UserName)</Sql>
+    <Sql tablename="security_users">ALTER TABLE security_users ADD CONSTRAINT ct_security_users_username UNIQUE (UserName,Domain)</Sql>
+    <Sql tablename="security_users">insert into security_users (UserId,UserName,CnName,UserPsw) values ('1','root','root','root')</Sql>
+  </Install_For_DB>
+  <Install_For_DB db_type="mysql" table_name="security_roles">
+    <Sql>
+      create table security_roles(RoleId varchar(30) PRIMARY KEY,
+      RoleName varchar(250) not null,RoleTitle varchar(250),RoleDesc varchar(400),RoleType integer default 0,RoleExtInfo varchar(400)) ENGINE=InnoDB
+    </Sql>
+    <Sql>create UNIQUE index idx_security_roles_rolename on security_roles (RoleName)</Sql>
+    <Sql>insert into security_roles (RoleId,RoleName,RoleDesc) values ('1','root','system super administrator')</Sql>
+	<Sql>insert into security_roles (RoleId,RoleName,RoleDesc) values ('2','guest','guest users')</Sql>
+	<Sql>insert into security_roles (RoleId,RoleName,RoleDesc) values ('3','sub_orgnode_mgr','orgnode sub manager')</Sql>
+	
+    <Sql>CREATE TABLE security_usersinroles (UserName varchar(200) not null,RoleId varchar(30) not null) ENGINE=InnoDB</Sql>
+    <Sql>alter table security_usersinroles ADD CONSTRAINT PK_security_UsersInRoles PRIMARY KEY(UserName,RoleId)</Sql>
+    <!-- 
+    <Sql>
+      ALTER TABLE security_usersinroles ADD CONSTRAINT FK_security_UsersInRoles_RoleId FOREIGN KEY
+      (RoleId) REFERENCES security_roles (RoleId) ON DELETE CASCADE
+    </Sql>
+    -->
+    <Sql>insert into security_usersinroles (UserName,RoleId) values ('root','1')</Sql>
+  </Install_For_DB>
+  <Install_For_DB db_type="mysql" table_name="security_org">
+    <Sql>
+      create table security_org(OrgNodeId varchar(30) PRIMARY KEY,
+      OrgNodeName varchar(200) not null,OrgNodeTitle varchar(250),OrgNodeDesc varchar(400) default '',
+      OrgNodeOrder integer default 0,OrgNodeParentId varchar(30)) ENGINE=InnoDB
+    </Sql>
+    <Sql>CREATE TABLE security_usersinorgs (UserName varchar(200) not null,OrgNodeId varchar(30) not null) ENGINE=InnoDB</Sql>
+    <Sql>alter table security_usersinorgs ADD CONSTRAINT PK_security_UsersInOrgs PRIMARY KEY(UserName,OrgNodeId)</Sql>
+    <!-- 
+    <Sql>ALTER TABLE security_usersinorgs ADD CONSTRAINT FK_security_UsersInOrgs_username FOREIGN KEY (UserName) REFERENCES security_users (UserName) ON DELETE CASCADE</Sql>
+    <Sql>ALTER TABLE security_usersinorgs ADD CONSTRAINT FK_security_UsersInOrgs_OrgNodeId FOREIGN KEY (OrgNodeId) REFERENCES security_org (OrgNodeId) ON DELETE CASCADE</Sql>
+    -->
+  </Install_For_DB>
+  <Install_For_DB db_type="sqlserver" table_name="security_users">
+    <Sql>
+      create table security_users(UserId varchar(30) PRIMARY KEY,
+      UserName varchar(200) not null,Domain integer default 0,State integer default 0,FullName varchar(100) default '',CnName varchar(100) default '',EnName varchar(100) default '',
+      Email varchar(256),BelongToOrgNodeId varchar(30),
+      UserPsw varchar(256),ResetPsw varchar(256) default '',PasswordEncryptType varchar(20),
+      CreationDate datetime,LastLoginDate datetime,LastActivityDate datetime,UsbKeyTxt varchar(200),UsbKeyEncType varchar(10),
+      ExtInfo text,ProExtInfo image)
+    </Sql>
+    <Sql>create index idx_security_users_username on security_users (UserName)</Sql>
+    <Sql>ALTER TABLE security_users ADD CONSTRAINT ct_security_users_username UNIQUE (UserName,Domain)</Sql>
+    <Sql>insert into security_users (UserId,UserName,CnName,UserPsw) values ('1','root','root','root')</Sql>
+
+    <Sql>
+      create table security_roles(RoleId varchar(30) PRIMARY KEY,
+      RoleName varchar(250) not null,RoleTitle varchar(250),RoleDesc varchar(400),RoleType integer default 0,RoleExtInfo varchar(400))
+    </Sql>
+    <Sql>create UNIQUE index idx_security_roles_rolename on security_roles (RoleName)</Sql>
+    <Sql>insert into security_roles (RoleId,RoleName,RoleDesc) values ('1','root','system super administrator')</Sql>
+    <Sql>insert into security_roles (RoleId,RoleName,RoleDesc) values ('2','guest','guest users')</Sql>
+    <Sql>insert into security_roles (RoleId,RoleName,RoleDesc) values ('3','sub_orgnode_mgr','orgnode sub manager')</Sql>
+
+    <Sql>CREATE TABLE security_usersinroles (UserName varchar(200) not null,RoleId varchar(30) not null)</Sql>
+    <Sql>alter table security_usersinroles ADD CONSTRAINT PK_security_UsersInRoles PRIMARY KEY(UserName,RoleId)</Sql>
+    <!-- 
+    <Sql>
+      ALTER TABLE security_usersinroles ADD CONSTRAINT FK_security_UsersInRoles_RoleId FOREIGN KEY
+      (RoleId) REFERENCES security_roles (RoleId) ON DELETE CASCADE
+    </Sql>
+    -->
+    <Sql>insert into security_usersinroles (UserName,RoleId) values ('root','1')</Sql>
+
+    <Sql>
+      create table security_org(OrgNodeId varchar(30) PRIMARY KEY,
+      OrgNodeName varchar(200) not null,OrgNodeTitle varchar(250),OrgNodeDesc varchar(400) default '',OrgNodeOrder integer default 0,OrgNodeParentId varchar(30))
+    </Sql>
+    
+    <Sql>CREATE TABLE security_usersinorgs (UserName varchar(200) not null,OrgNodeId varchar(30) not null)</Sql>
+    <Sql>alter table security_usersinorgs ADD CONSTRAINT PK_security_UsersInOrgs PRIMARY KEY(UserName,OrgNodeId)</Sql>
+    <!-- 
+    <Sql>ALTER TABLE security_usersinorgs ADD CONSTRAINT FK_security_UsersInOrgs_username FOREIGN KEY (UserName) REFERENCES security_users (UserName) ON DELETE CASCADE</Sql>
+    <Sql>ALTER TABLE security_usersinorgs ADD CONSTRAINT FK_security_UsersInOrgs_OrgNodeId FOREIGN KEY (OrgNodeId) REFERENCES security_org (OrgNodeId) ON DELETE CASCADE</Sql>
+   -->
+  </Install_For_DB>
+  <Module name="Security_User" desc="">
+    <Func name="CheckPassword" desc="" pure_select="true">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@UserName" />
+      <InParam name="@Password" />
+      <Content_For_DB >
+        <Sql exe_type="select" set_param="@UserId=(0,0)" result_tablename="user_info">
+          select #UserCols from security_users where UserName=[@UserName] and Domain=[@Domain] and UserPsw=[@Password]
+        </Sql>
+        <Sql exe_type="select" if="@UserId!=null &amp;&amp; @Domain==0" result_tablename="role_info">
+          select RoleId from security_usersinroles where UserName=[@UserName]
+        </Sql>
+        <Sql exe_type="select" if="@UserId!=null &amp;&amp; @Domain==0" result_tablename="org_info">
+          select OrgNodeId from security_usersinorgs where UserName=[@UserName]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="GetUserDetail" desc="" pure_select="true">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@UserName" />
+      <Content_For_DB >
+        <Sql exe_type="select" set_param="@UserId=(0,0)" result_tablename="user_info">
+          select #UserCols from security_users where UserName=[@UserName] and Domain=[@Domain]
+        </Sql>
+        <Sql exe_type="select" if="@UserId!=null &amp;&amp; @Domain==0" result_tablename="role_info">
+          select RoleId from security_usersinroles where UserName=[@UserName]
+        </Sql>
+        <Sql exe_type="select" if="@UserId!=null &amp;&amp; @Domain==0" result_tablename="org_info">
+          select OrgNodeId from security_usersinorgs where UserName=[@UserName]
+        </Sql>
+        <Sql exe_type="select" if="@UserId!=null" result_tablename="psw_info">
+          select UserPsw from security_users where UserName=[@UserName] and Domain=[@Domain]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="log_login" desc="" exe_type="nonquery">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@UserName" />
+      <InParam name="@DT" type="Date"/>
+      <Content_For_DB >
+        <Sql exe_type="update">
+          update security_users set LastLoginDate=[@DT],LastActivityDate=[@DT] where UserName=[@UserName] and Domain=[@Domain]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="log_activity" desc="" exe_type="nonquery">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@UserName" />
+      <InParam name="@DT" type="Date"/>
+      <Content_For_DB >
+        <Sql exe_type="update">
+          update security_users set LastActivityDate=[@DT] where UserName=[@UserName] and Domain=[@Domain]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="ChangePassword" desc="" exe_type="nonquery">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@NewPassword" />
+      <InParam name="@UserName" />
+      <InParam name="@OldPassword" />
+      <Content_For_DB >
+        <Sql exe_type="update">
+          update security_users set UserPsw=[@NewPassword] where UserName=[@UserName] and Domain=[@Domain] and UserPsw=[@OldPassword]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="ChangePasswordByAdm" desc="" exe_type="nonquery">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@NewPassword" />
+      <InParam name="@UserName" />
+      <Content_For_DB >
+        <Sql exe_type="update">
+          update security_users set UserPsw=[@NewPassword] where UserName=[@UserName] and Domain=[@Domain]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="ChangePasswordByResetTemp" desc="" exe_type="nonquery">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@NewPassword" />
+      <InParam name="@ResetPsw" />
+      <InParam name="@UserName" />
+      <Content_For_DB >
+        <Sql exe_type="update">
+          update security_users set UserPsw=[@NewPassword] where UserName=[@UserName] and Domain=[@Domain] and ResetPsw=[@ResetPsw] and ResetPsw!=''
+        </Sql>
+        <Sql exe_type="update">
+        update security_users set ResetPsw='' where UserName=[@UserName] and Domain=[@Domain]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="ResetTempPassword" desc="" exe_type="nonquery">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@ResetPsw" />
+      <InParam name="@UserName" />
+      <Content_For_DB >
+        <Sql exe_type="update">
+        update security_users set ResetPsw=[@ResetPsw] where UserName=[@UserName] and Domain=[@Domain]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="GetPswByUserName" desc="" exe_type="nonquery">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@UserName" />
+      <Content_For_DB >
+        <Sql exe_type="select">
+		select UserPsw from security_users where UserName=[@UserName] and Domain=[@Domain]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="ChangeUserState" desc="" exe_type="nonquery">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@State" />
+      <InParam name="@UserName" />
+      <Content_For_DB >
+        <Sql exe_type="update">
+          update security_users set State=[@State] where UserName=[@UserName] and Domain=[@Domain]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="GetUserById" desc="" pure_select="true">
+      <InParam name="@UserId"/>
+      <Content_For_DB>
+        <Sql exe_type="select">
+          select #UserCols from security_users where UserId=[@UserId]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="GetUserByName" desc="根据用户注册名获取用户" pure_select="true">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@UserName" />
+      <Content>
+        select #UserCols from security_users where UserName=[@UserName] and Domain=[@Domain]
+        </Content>
+    </Func>
+    <Func name="GetUserById" desc="根据用户注册名获取用户" pure_select="true">
+      <InParam name="@UserId"/>
+      <Content>
+        select #UserCols
+        from security_users
+        where UserId=[@UserId]</Content>
+    </Func>
+    <Func name="GetUserProfileById" desc="" pure_select="true">
+      <InParam name="@UserId"/>
+      <Content_For_DB>
+        <Sql exe_type="select" set_param="@UserName=(0,1)|@Domain=(0,2)" result_tablename="user_info">
+          select #UserCols from security_users where UserId=[@UserId]
+        </Sql>
+        <Sql exe_type="select" if="@UserName!=null &amp;&amp; @Domain==0"  result_tablename="role_info">
+          select RoleId from security_usersinroles where UserName=[@UserName]
+        </Sql>
+        <Sql exe_type="select" if="@UserName!=null &amp;&amp; @Domain==0"  result_tablename="org_info">
+          select OrgNodeId from security_usersinorgs where UserName=[@UserName]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="GetUserProfileByName" desc="根据用户注册名获取用户" pure_select="true">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@UserName" />
+      <Content_For_DB>
+        <Sql exe_type="select" set_param="@UserId=(0,0)"  result_tablename="user_info">
+          select #UserCols from security_users where UserName=[@UserName] and Domain=[@Domain]
+        </Sql>
+        <Sql exe_type="select" if="@UserId!=null &amp;&amp; @Domain==0" result_tablename="role_info">
+          select RoleId from security_usersinroles where UserName=[@UserName]
+        </Sql>
+        <Sql exe_type="select" if="@UserId!=null &amp;&amp; @Domain==0" result_tablename="org_info">
+          select OrgNodeId from security_usersinorgs where UserName=[@UserName]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="AddNewUser" desc="">
+      <InParam name="@UserId"/>
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@UserName" />
+      <InParam name="@State" type="Int32" default_val="0"/>
+      <InParam name="@FullName" default_val="" />
+      <InParam name="@CnName" default_val="" />
+      <InParam name="@EnName" default_val="" />
+      <InParam name="@Password" />
+      <InParam name="@Email" default_val="" />
+      <InParam name="@CreationDate" type="DateTime" default_val="CURRENT_TIMESTAMP()" />
+      <InParam name="@LastLoginDate" type="DateTime" default_val="CURRENT_TIMESTAMP()" />
+      <InParam name="@LastActivityDate" type="DateTime" default_val="CURRENT_TIMESTAMP()" />
+      <Content_For_DB >
+        <Sql exe_type="insert">
+          insert into security_users
+          (UserId,Domain,UserName,State,FullName,CnName,EnName,UserPsw,Email,CreationDate,LastLoginDate,LastActivityDate)
+          values
+          ([@UserId],[@Domain],[@UserName],[@State],[@FullName],[@CnName],[@EnName],[@Password],[@Email],[@CreationDate],[@LastLoginDate],[@LastActivityDate])
+        </Sql>
+        <!-- 
+        <Sql type="auto_fit">
+          select_identity
+        </Sql>
+         -->
+      </Content_For_DB>
+    </Func>
+    <Func name="ChangePasswordQuestionAndAnswer" desc="">
+      <InParam name="@PasswordQuestion" />
+      <InParam name="@PasswordAnswer" />
+      <InParam name="@UserName" />
+      <InParam name="@Password" />
+      <Content>
+        update security_users
+        set PasswordQuestion=[@PasswordQuestion],PasswordAnswer=[@PasswordAnswer]
+        where UserName=[@UserName[ and UserPsw=[@Password[
+      </Content>
+    </Func>
+    <Func name="DeleteUserByUserName" desc="" exe_type="nonquery">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@UserName" />
+      <InParam name="@UserNameWithDomain" />
+      <Content_For_DB>
+        <Sql exe_type="delete">
+          delete from security_users where UserName=[@UserName] and Domain=[@Domain]
+        </Sql>
+        <Sql exe_type="delete">
+          delete from security_usersinroles where UserName=[@UserNameWithDomain]
+        </Sql>
+        <Sql exe_type="delete">
+          delete from security_usersinorgs where UserName=[@UserNameWithDomain]
+        </Sql>
+      </Content_For_DB>
+      </Func>
+    <Func name="DeleteUserByUserId" desc="" exe_type="nonquery">
+      <InParam name="@UserId"/>
+      <InParam name="@UserNameWithDomain" />
+      <Content_For_DB>
+        <Sql exe_type="delete">
+          delete from security_users where UserId=[@UserId]
+        </Sql>
+        <Sql exe_type="delete">
+          delete from security_usersinroles where UserName=[@UserNameWithDomain]
+        </Sql>
+        <Sql exe_type="delete">
+          delete from security_usersinorgs where UserName=[@UserNameWithDomain]
+        </Sql>
+      </Content_For_DB>
+      </Func>
+    <Func name="FindUsersByEmail" desc="" pure_select="true">
+    	<InParam name="@Domain" type="Int32" default_val="0" />
+      	<InParam name="$emailToMatch" />
+      	<InParam name="$StateInStr" nullable="true"/>
+      <Content>
+      select #UserCols from security_users where
+          Email like [$emailToMatch] and Domain=[@Domain]{ and State in ([$StateInStr])}
+	</Content>
+    </Func>
+    <Func name="FindUserByUserName" desc="" pure_select="true">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="$usernameToMatch" />
+      <InParam name="@IsNamePrefix" type="Boolean"/>
+      <InParam name="$StateInStr" nullable="true"/>
+      <Content_For_DB>
+        <Sql exe_type="select" if="@IsNamePrefix==false">
+          select #UserCols from security_users where
+          (UserName like [$usernameToMatch] or CnName like [$usernameToMatch] or EnName like [$usernameToMatch]) and Domain=[@Domain]{ and State in ([$StateInStr])}
+        </Sql>
+        <Sql exe_type="select" if="@IsNamePrefix==true">
+          select #UserCols from security_users where
+          UserName like [$usernameToMatch] and Domain=[@Domain]{ and State in ([$StateInStr])}
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    
+    <Func name="GetAllUsers" desc="">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="$StateInStr" nullable="true"/>
+      <Content_For_DB>
+        <Sql exe_type="select">
+          select #UserCols from security_users where Domain=[@Domain]{ and State in ([$StateInStr])}
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="GetAllUsersAfter" desc="">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@AfterUserName" nullable="true"/>
+      <InParam name="$StateInStr" nullable="true"/>
+      <Content_For_DB>
+        <Sql exe_type="select">
+          select #UserCols from security_users where Domain=[@Domain] and UserName&gt;[@AfterUserName]{ and State in ([$StateInStr])}
+          order by UserName
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="GetUserNum" desc="">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="$StateInStr" nullable="true"/>
+      <Content_For_DB>
+        <Sql exe_type="select">
+          select count(*) from security_users where Domain=[@Domain]{ and State in ([$StateInStr])}
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="GetPasswordByAnswer" desc="" pure_select="true">
+      <InParam name="@UserName" />
+      <InParam name="@PasswordAnswer" />
+      <Content>
+        select UserPsw from security_users
+        where UserName=[@UserName] and PasswordAnswer=[@PasswordAnswer]
+      </Content>
+    </Func>
+    <Func name="GetUserByEmail" desc="" pure_select="true">
+      <InParam name="@Email" />
+      <Content_For_DB>
+        <Sql exe_type="select">
+          select #UserCols from security_users where Email=[@Email]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="UpdateUser" desc="" exe_type="nonquery">
+      <InParam name="@CnName" default_val="" />
+      <InParam name="@EnName" default_val="" />
+      <InParam name="@FullName" default_val="" />
+      <InParam name="@Email" />
+      <InParam name="@State" type="Int32" />
+      <InParam name="@UserId"/>
+      <Content_For_DB>
+        <Sql exe_type="update">
+          update security_users set CnName=[@CnName],EnName=[@EnName]{,FullName=[@FullName]}{,Email=[@Email]}{,State=[@State]} where UserId=[@UserId]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="SetUserBelongToOrgNodeId" desc="" exe_type="nonquery">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@UserName" />
+      <InParam name="@OrgNodeId" nullable="true"/>
+      <Content_For_DB>
+        <Sql exe_type="update">
+          update security_users set BelongToOrgNodeId=[@OrgNodeId] where UserName=[@UserName] and Domain=[@Domain]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="UpdateUserUsbKey" desc="" exe_type="nonquery">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@UsbKeyEncType" default_val="" />
+      <InParam name="@UsbKeyTxt" />
+      <InParam name="@UserName" />
+      <Content_For_DB>
+        <Sql exe_type="update">
+          update security_users set UsbKeyEncType=[@UsbKeyEncType],UsbKeyTxt=[@UsbKeyTxt] where UserName=[@UserName] and Domain=[@Domain]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="GetProExtInfo" desc="获得内部受保护的扩展信息">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@UserName"/>
+      <Content_For_DB>
+      	<Sql exe_type="select">
+      	select ProExtInfo from security_users where UserName=[@UserName] and Domain=[@Domain]
+      	</Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="SetProExtInfo" desc="更新内部受保护的扩展信息">
+      <InParam name="@Domain" type="Int32" default_val="0" />
+      <InParam name="@UserName"/>
+      <InParam name="@ProExtInfo" type="ByteArray" nullable="true"/>
+      <Content_For_DB>
+      	<Sql exe_type="update">
+      	update security_users set ProExtInfo=[@ProExtInfo] where UserName=[@UserName] and Domain=[@Domain]
+      	</Sql>
+      </Content_For_DB>
+    </Func>
+  </Module>
+  <Module name="Security_Role" desc="">
+    <Func name="GetAllRoles" desc="" pure_select="true">
+      <Content_For_DB>
+        <Sql exe_type="select">
+          select #RoleCols from security_roles
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="AddRole" desc="" exe_type="nonquery">
+      <InParam name="@RoleId" />
+      <InParam name="@RoleName" />
+      <InParam name="@RoleTitle" default_val="" />
+      <InParam name="@RoleDesc" default_val="" />
+      <InParam name="@RoleType" type="Int32" default_val="0"/>
+      <InParam name="@RoleExtInfo" default_val="" />
+      <Content_For_DB>
+        <Sql exe_type="insert">
+          insert into security_roles (RoleId,RoleName,RoleTitle,RoleDesc,RoleType,RoleExtInfo)
+          values ([@RoleId],[@RoleName],[@RoleTitle],[@RoleDesc],[@RoleType],[@RoleExtInfo])
+        </Sql>
+        <!-- 
+        <Sql type="auto_fit">
+          select_identity
+        </Sql>
+        -->
+      </Content_For_DB>
+    </Func>
+    <Func name="UpdateRole" desc="">
+      <InParam name="@RoleName" />
+      <InParam name="@RoleTitle" default_val="" />
+      <InParam name="@RoleDesc" default_val="" />
+      <InParam name="@RoleType" type="Int32" default_val="0"/>
+      <InParam name="@RoleExtInfo" default_val="" />
+      <InParam name="@RoleId"/>
+      <Content_For_DB>
+        <Sql exe_type="update">
+          update security_roles set RoleName=[@RoleName],RoleTitle=[@RoleTitle],RoleDesc=[@RoleDesc],RoleType=[@RoleType],RoleExtInfo=[@RoleExtInfo]
+          where RoleId=[@RoleId]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="DelRole" desc="">
+      <InParam name="@RoleId"/>
+      <Content_For_DB>
+        <Sql exe_type="delete">
+          delete from security_roles where RoleId=[@RoleId]
+        </Sql>
+        <Sql exe_type="delete">
+          delete from security_usersinroles where RoleId=[@RoleId]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="AddUserNameToRole" desc="" exe_type="nonquery">
+      <InParam name="@UserName" />
+      <InParam name="@RoleId"/>
+      <Content_For_DB>
+        <Sql exe_type="insert">
+          insert into security_usersinroles (UserName,RoleId) values ([@UserName],[@RoleId])
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="RemoveUserNameFromRole" desc="" exe_type="nonquery">
+      <InParam name="@UserName" />
+      <InParam name="@RoleId"/>
+      <Content_For_DB>
+        <Sql exe_type="delete">
+          delete from security_usersinroles where UserName=[@UserName] and RoleId=[@RoleId]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="RemoveUserRoles" desc="删除一个用户的所有角色信息" exe_type="nonquery">
+      <InParam name="@UserName" />
+      <Content_For_DB>
+        <Sql exe_type="delete">
+          delete from security_usersinroles where UserName=[@UserName]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="ClearAllUserFromRole" desc="">
+      <InParam name="@RoleId"/>
+      <Content>
+        delect from security_usersinroles where RoleId=[@RoleId]
+      </Content>
+    </Func>
+    <Func name="ClearAllRoleFromUser" desc="">
+      <InParam name="@UserId"/>
+      <Content>
+        delect from security_usersinroles where UserId=[@UserId]
+      </Content>
+    </Func>
+    <Func name="GetRoleIdsByUserName" desc="" pure_select="true">
+      <InParam name="@UserName"/>
+      <Content_For_DB>
+        <Sql exe_type="select">
+          select RoleId from security_usersinroles where UserName=[@UserName]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="GetUsersByRole" desc="" pure_select="true">
+      <InParam name="@RoleId"/>
+      <InParam name="@DomainId" type="Int32" default_val="0"/>
+      <Content_For_DB>
+        <Sql exe_type="select">select #U.UserCols from security_users u,security_usersinroles ur
+  where ur.RoleId=[@RoleId] and u.UserName=ur.UserName and u.Domain=[@DomainId]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="GetUsersByRoles" desc="" pure_select="true">
+      <InParam name="$RoleIdStr"/>
+      <InParam name="@DomainId" type="Int32" default_val="0"/>
+      <Content_For_DB>
+        <Sql exe_type="select">select #U.UserCols from security_users u,security_usersinroles ur
+  where ur.RoleId in ([$RoleIdStr]) and u.UserName=ur.UserName and u.Domain=[@DomainId]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="IsUserNameInRole" desc="">
+      <InParam name="@UserName" />
+      <InParam name="@RoleId"/>
+      <Content_For_DB>
+        <Sql exe_type="select">
+          select count(*) from security_usersinroles where UserName=[@UserName] and RoleId=[@RoleId]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+  </Module>
+  <Module name="Security_Org" desc="">
+    <Func name="AddOrgNode" desc="" exe_type="nonquery">
+      <InParam name="@OrgNodeId" />
+      <InParam name="@OrgNodeName" />
+      <InParam name="@OrgNodeTitle" default_val="" />
+      <InParam name="@OrgNodeDesc" default_val="" />
+      <InParam name="@OrgNodeOrder" type="Int32" default_val="0" />
+      <InParam name="@OrgNodeParentId" nullable="true"/>
+      <Content></Content>
+      <Content_For_DB >
+        <Sql exe_type="insert">
+          insert into security_org (OrgNodeId,OrgNodeName,OrgNodeTitle,OrgNodeDesc,OrgNodeOrder,OrgNodeParentId)
+          values ([@OrgNodeId],[@OrgNodeName],[@OrgNodeTitle],[@OrgNodeDesc],[@OrgNodeOrder],[@OrgNodeParentId])
+        </Sql>
+        <!-- 
+        <Sql type="auto_fit">
+          select_identity
+        </Sql>
+        -->
+      </Content_For_DB>
+    </Func>
+    <Func name="GetAllOrgNode" desc="" pure_select="true">
+      <Content_For_DB >
+        <Sql exe_type="select">select #OrgCols from security_org</Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="UpdateOrgNode" desc="" exe_type="nonquery">
+      <InParam name="@OrgNodeName" />
+      <InParam name="@OrgNodeTitle" default_val="" />
+      <InParam name="@OrgNodeDesc" default_val="" />
+      <InParam name="@OrgNodeOrder" type="Int32" />
+      <InParam name="@OrgNodeId"/>
+      <Content_For_DB >
+        <Sql exe_type="update">
+          update security_org set OrgNodeName=[@OrgNodeName],OrgNodeTitle=[@OrgNodeTitle],OrgNodeDesc=[@OrgNodeDesc],OrgNodeOrder=[@OrgNodeOrder]
+          where OrgNodeId=[@OrgNodeId]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="ChangeNodeParent" desc="" exe_type="nonquery">
+      <InParam name="@OrgNodeParentId"/>
+      <InParam name="@OrgNodeId"/>
+      <Content_For_DB >
+        <Sql exe_type="update">
+          update security_org set OrgNodeParentId=[@OrgNodeParentId] where OrgNodeId=[@OrgNodeId]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="DelOrgNode" desc="" exe_type="nonquery">
+      <InParam name="@OrgNodeId"/>
+      <Content_For_DB >
+        <Sql exe_type="delete">delete from security_org where OrgNodeId=[@OrgNodeId]</Sql>
+        <Sql exe_type="delete">delete from security_usersinorgs where OrgNodeId=[@OrgNodeId]</Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="GetUsersByOrgNode" desc="" pure_select="true">
+      <InParam name="@OrgNodeId"/>
+      <Content_For_DB >
+        <Sql exe_type="select">
+          select #U.UserCols from security_users u,security_usersinorgs uo
+          where uo.OrgNodeId=[@OrgNodeId] and u.UserName=uo.UserName and u.Domain=0
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="GetUsersByOrgNodeIds" desc="" pure_select="true">
+      <InParam name="$OrgNodeIdStr"/>
+      <Content_For_DB >
+        <Sql exe_type="select">
+          select #U.UserCols from security_users u,security_usersinorgs uo
+          where uo.OrgNodeId in ([$OrgNodeIdStr]) and u.UserName=uo.UserName and u.Domain=0
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="GetOrgNodeIdsByUserName" desc="" pure_select="true">
+      <InParam name="@UserName" />
+      <Content_For_DB >
+        <Sql exe_type="select">
+          select OrgNodeId from security_usersinorgs where UserName=[@UserName]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="AddUserNameToOrgNode" desc="" exe_type="nonquery">
+      <InParam name="@UserName" />
+      <InParam name="@OrgNodeId"/>
+      <Content_For_DB >
+        <Sql exe_type="insert">
+          insert into security_usersinorgs (UserName,OrgNodeId) values ([@UserName],[@OrgNodeId])
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="RemoveUserFromOrgNode" desc="" exe_type="nonquery">
+      <InParam name="@UserName" />
+      <InParam name="@OrgNodeId"/>
+      <Content_For_DB >
+        <Sql exe_type="delete">
+          delete from security_usersinorgs where UserName=[@UserName] and OrgNodeId=[@OrgNodeId]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="GetOrgNodeIdsByUserName" desc="" pure_select="true">
+      <InParam name="@UserName" />
+      <Content_For_DB >
+        <Sql exe_type="select">select OrgNodeId from security_usersinorgs where UserName=[@UserName]</Sql>
+      </Content_For_DB>
+    </Func>
+  </Module>
+  <ORMap class="com.dw.user.Role">
+    <map column="RoleId" property="_Id" />
+    <map column="RoleName" property="_Name" />
+    <map column="RoleTitle" property="_Title" />
+    <map column="RoleDesc" property="_Desc" />
+    <map column="RoleType" property="_Type" />
+    <map column="RoleExtInfo" property="_ExtInfo" />
+  </ORMap>
+  <ORMap class="com.dw.user.OrgNode">
+    <map column="OrgNodeId" property="_OrgNodeId" />
+    <map column="OrgNodeName" property="_OrgNodeName" />
+    <map column="OrgNodeTitle" property="_OrgNodeTitle" />
+    <map column="OrgNodeDesc" property="_OrgNodeDesc" />
+    <map column="OrgNodeOrder" property="_OrgNodeOrder" />
+    <map column="OrgNodeParentId" property="_OrgNodeParentId" />
+  </ORMap>
+  <ORMap class="com.dw.user.User">
+    <map column="UserId" property="_UserId" />
+    <map column="UserName" property="_UserName" />
+    <map column="Domain" property="_DomainId" />
+    <map column="FullName" property="_FullName" />
+    <map column="CnName" property="_CnName" />
+    <map column="EnName" property="_EnName" />
+    <map column="State" property="_State" />
+    <map column="BelongToOrgNodeId" property="_BelongToOrgNodeId" />
+    <map column="Email" property="_Email" />
+    <map column="CreationDate" property="_CreationDate" />
+    <map column="LastLoginDate" property="_LastLoginDate" />
+    <map column="LastActivityDate" property="_LastActivityDate" />
+    <map column="LastPasswordChangedDate" property="_LastPasswordChangedDate" />
+    <map column="UsbKeyTxt" property="_UsbKeyTxt" />
+    <map column="UsbKeyEncType" property="_UsbKeyEncType" />
+    <map column="ExtInfo" property="_ExtInfo" />
+  </ORMap>
+</Gdb>

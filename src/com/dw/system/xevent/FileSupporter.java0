@@ -1,0 +1,900 @@
+package com.css.system.xevent ;
+
+import java.util.zip.*;
+import java.util.jar.*;
+import java.util.*;
+import java.text.*;
+import java.io.*;
+
+import org.w3c.dom.*;
+import org.xml.sax.*;
+
+import com.oztime.page.system.*;
+import com.oztime.page.conf.*;
+
+/**
+ * This class is a supporter for
+ */
+
+public class FileSupporter
+{
+	 private static final String JDK_HOME=System.getProperty("java.home")+File.separator+"..";
+	 XPathWorker xpath = null ;
+	 String workshopFile = null ;
+	 public FileSupporter (String myworkfilename)
+		  throws ConfigureException
+	 {
+		  workshopFile = myworkfilename ;
+		  String abspath = Configuration.getPathProperty ("workshop.info.dir",myworkfilename) ;
+		  xpath = XPathWorker.getXPath (abspath) ;
+	 }
+
+	 private ZipOutputStream makeNewArchive(String filename)
+		  throws IOException
+	 {
+		  File zip=new File (filename) ;
+		  File parent=zip.getParentFile () ;
+		  if( (parent!=null)&&(!parent.canWrite()) )
+			   throw new IOException (zip + "cannot written!") ;
+		  zip.delete() ;
+		  ZipOutputStream stream = new ZipOutputStream(
+			   new GZIPOutputStream ( new FileOutputStream(zip)) ) ;
+		  stream.setLevel (0) ;
+		  return stream ;
+	 }
+
+	 private File makeArchive(String filename)
+		  throws IOException
+	 {
+		  File zip=new File(filename);
+		  File parent=zip.getParentFile();
+		  if( (parent!=null)&&(!parent.canWrite()) )
+			   throw new IOException (zip + "cannot written!");
+		  ZipOutputStream stream=new ZipOutputStream(
+			   new GZIPOutputStream(new FileOutputStream(zip)));
+		  stream.setLevel(0);
+
+		  stream.close();
+
+		  return zip;
+	 }
+
+	 private Vector archiveEntryList_ = new Vector () ;
+	 private int archivecount_ = 0 ;
+	 private void addToArchive (
+				   ZipOutputStream stream,
+				   File file,
+				   FileFilter filter,
+				   String entryName,
+				   int recurseDepth)
+		  throws IOException
+	 {
+		  if( !file.exists() )
+		  {
+			   System.err.println("  error: file "+file+" does not exist. Skipping.");
+		  }
+
+		  if( file.isDirectory() )
+		  {
+			   File[] ls=file.listFiles(filter);
+			   if( ls.length==0 )
+			   {
+					// empty dir
+					if( archiveEntryList_.contains(entryName+"/") )
+					{
+						 System.err.println("  warning: duplicate entry: "+entryName+"/"+". Skipping.");
+					}
+					else
+					{
+						 System.out.println("  "+file);
+						 ZipEntry newEntry=new ZipEntry(entryName+"/");
+						 stream.putNextEntry(newEntry);
+						 stream.closeEntry();
+						 archiveEntryList_.add(entryName+"/");
+					}
+			   }
+			   for(int i=0; i<ls.length; i++)
+			   {//not empty dir,then add sub dir files into archive
+					String ename=ls[i].getAbsolutePath();
+					ename=entryName+ename.substring(file.getAbsolutePath().length());
+					ename=convertToGenericPath(ename);
+					if( ename.startsWith("/") )
+						 ename=ename.substring(1);
+					if( recurseDepth>0 )
+						 addToArchive(stream, ls[i], filter, ename, recurseDepth-1);
+			   }
+		  }
+		  else if( archiveEntryList_.contains(entryName) )
+		  {//already existed
+			   System.err.println("  warning: duplicate entry: "+entryName+". Skipping.");
+		  }
+		  else
+		  {//add a new file
+			   System.out.println("  "+file);
+			   /*
+			   String s="  "+file;
+			   while(s.length()<79) s+=' ';
+			   System.out.print(s+"\r");
+			   */
+
+			   archivecount_++;
+			   ZipEntry newEntry=new ZipEntry(entryName);
+			   stream.putNextEntry(newEntry);
+			   FileInputStream in=new FileInputStream(file);
+			   byte[] buf=new byte[2048];
+			   int read=in.read(buf, 0, buf.length);
+			   while( read>0 )
+			   {
+					stream.write(buf, 0, read);
+					read=in.read(buf, 0, buf.length);
+			   }
+			   in.close();
+			   stream.closeEntry();
+			   archiveEntryList_.add(entryName);
+		  }
+	 }
+
+	 private String convertToGenericPath(String line)
+	 {
+		  return line.replace(File.separatorChar, '/');
+	 }
+	 /**
+	  * 对于生成的可运行jar文件，由于需要指定包含main函数的manifest文件
+	  */
+	 private void generateManifestFile(File mfFile,String instClassName) throws IOException
+	 {
+		  PrintWriter out=new PrintWriter
+			   (new BufferedWriter
+					(new OutputStreamWriter(new FileOutputStream(mfFile),"UTF-8")));
+
+		  out.println("Manifest-Version: 1.0");
+		  out.println("Main-Class: "+instClassName);
+		  out.close();
+	 }
+
+	 /**
+	  * 连接文档，使install.jar内容挂接到安装类中
+	  */
+	 private void appendArchive(File instClass)
+		  throws IOException
+	 {
+		  FileOutputStream out=new FileOutputStream(instClass.getName(), true);
+		  FileInputStream zipStream=new FileInputStream("install.jar");
+		  byte[] buf=new byte[2048];
+		  int read=zipStream.read(buf);
+		  while(read>0)
+		  {
+			   out.write(buf, 0, read);
+			   read=zipStream.read(buf);
+		  }
+		  zipStream.close();
+		  out.close();
+	 }
+	 /**
+	  * 拷贝文件
+	  */
+	 public static void copy(File fin, File fout) throws IOException
+	 {
+		  FileOutputStream out=new FileOutputStream(fout);
+		  FileInputStream in=new FileInputStream(fin);
+		  byte[] buf=new byte[2048];
+		  int read=in.read(buf);
+		  while( read>0 )
+		  {
+			   out.write(buf, 0, read);
+			   read=in.read(buf);
+		  }
+		  in.close();
+		  out.close();
+	 }
+	 /**
+	  * 拷贝文件
+	  */
+	 public static void copy(InputStream in, File fout) throws IOException
+	 {
+		  FileOutputStream out=new FileOutputStream(fout);
+		  byte[] buf=new byte[2048];
+		  int read=in.read(buf);
+		  while( read>0 )
+		  {
+			   out.write(buf, 0, read);
+			   read=in.read(buf);
+		  }
+		  out.close();
+	 }
+	 /**
+	  * 运行jar命令，
+	  */
+	 private void jar(String options, File jarFile, File[] files)
+		  throws IOException
+	 {
+		  Process p=null;
+		  Vector argsv=new Vector();
+		  argsv.add(JDK_HOME+File.separator+"bin"+File.separator+"jar");
+		  if( options!=null && !options.equals("") )
+			   argsv.add(options);
+		  argsv.add(jarFile.getName());
+		  for(int i=0; i<files.length; i++)
+			   argsv.add(files[i].getName());
+		  String[] args=new String[argsv.size()];
+		  for(int i=0; i<args.length; i++)
+			   args[i]=(String)argsv.get(i);
+		  try
+		  {
+			   p=Runtime.getRuntime().exec(args);
+			   p.waitFor();
+		  }
+		  catch( Exception rte )
+		  {
+			   throw new IOException("Runtime exception: check if you have installed the JDK and run java from the JDK\n"+
+					"Exception message: "+rte.getMessage());
+		  }
+		  printCmdOutput(p, "jar");
+		  if( p.exitValue()!=0 )
+			   throw new RuntimeException("  abnormal exit");
+	 }
+	 /**
+	  * 对jar文件进行签名
+	  */
+	 private void jarsign(String passphrase, File jarFile, String alias) throws IOException
+	 {
+		  Process p=null;
+		  try
+		  {
+			   p=Runtime.getRuntime().exec(new String[]
+					{JDK_HOME+File.separator+"bin"+File.separator+"jarsigner",
+					"-storepass",
+					passphrase,
+					jarFile.getName(),
+					alias});
+			   p.waitFor();
+		  }
+		  catch( Exception rte )
+		  {
+			   throw new IOException("Runtime exception: check if you have installed the JDK and run java from the JDK\n"+
+					"Exception message: "+rte.getMessage());
+		  }
+		  printCmdOutput(p, "jarsign");
+		  if( p.exitValue()!=0 )
+			   throw new RuntimeException("  abnormal exit");
+	 }
+
+
+	 /**
+	  * 对指定的java文件进行编译
+	  * @param javafile java文件名
+	  * @return File 编译完后的class文件
+	  */
+	 private File compile(String javafile) throws IOException
+	 {
+		  File classFile=null;
+		  Process p=null;
+		  try
+		  {
+			   //System.out.println ("jdkhome="+JDK_HOME) ;
+			   p=Runtime.getRuntime().exec(new String[]
+					{JDK_HOME+File.separator+"bin"+File.separator+"javac", javafile});
+			   p.waitFor();
+		  }
+		  catch( Exception rte )
+		  {
+			   throw new IOException("Runtime exception: check if you have installed the JDK and run java from the JDK\n"+
+					"Exception message: "+rte.getMessage());
+		  }
+
+		  printCmdOutput(p, "javac");
+		  if( p.exitValue()!=0 )
+			   throw new RuntimeException("  abnormal exit");
+
+		  classFile=new File(javafile.substring(0, javafile.lastIndexOf('.'))+".class");
+		  System.out.println("  "+classFile+" "+classFile.exists());
+		  //if( !classFile.exists() ) throw new IOException("could not compile "+javafile);
+		  return classFile;
+	 }
+
+	 private void printCmdOutput(Process p, String cmdName) throws IOException
+	 {
+		  BufferedReader psIn=new BufferedReader(
+			   new InputStreamReader(p.getInputStream()));
+		  BufferedReader psErr=new BufferedReader(
+			   new InputStreamReader(p.getErrorStream()));
+		  int n=0;
+		  System.out.println("  --- start "+cmdName+" ---");
+		  String inLine=psIn.readLine();
+		  String errLine=psErr.readLine();
+		  while( (inLine!=null)||(errLine!=null) )
+		  {
+			   if( inLine!=null ) System.out.println("  "+inLine);
+			   if( errLine!=null ) System.err.println("  "+errLine);
+			   inLine=psIn.readLine();
+			   errLine=psErr.readLine();
+		  }
+		  psIn.close();
+		  psErr.close();
+		  System.out.println("  --- end   "+cmdName+" ---");
+	 }
+	 /**
+	  *  根据字符串数组中指定的  包名/文件名  对classpath中的相关文件内容
+	  *  进行打包。
+	  *  Copy all files from a jar file from inside a jar file
+	  *  to a target jar file
+	  * @param out JarOutputStream
+	  * @param jarSourceName String被打包的文件名
+	  */
+	 private void copyInternalToJar(JarOutputStream out, String[] JAR_FILES)
+		  throws IOException
+	 {
+		  for(int i=0; i<JAR_FILES.length; i++)
+		  {
+			   String sourceName = JAR_FILES[i];
+			   if( sourceName.endsWith(".jar") )
+			   {
+					copyJarFilesToJar(out,sourceName);
+			   }
+			   else
+			   {
+					InputStream is = getClass().getResourceAsStream("/"+sourceName);
+					//System.out.println ("is="+is+" sourcename="+sourceName) ;
+					addToJar(out, is, sourceName, is.available());
+			   }
+		  } // endfor
+	 }
+
+	 /**
+	  * 把一个jar文件中的所有文件打包到另一个jar文件中
+	  *  Copy all files from a jar file from inside a jar file
+	  *  to a target jar file
+	  * @param out JarOutputStream
+	  * @param jarSourceName String
+	  */
+	 private void copyJarFilesToJar(JarOutputStream out, String jarSourceName)
+		  throws IOException
+	 {
+		  byte[] buffer = new byte[2048];
+
+		  InputStream isJar = getClass().getResourceAsStream("/"+jarSourceName);
+		  JarInputStream zin = new JarInputStream(isJar);
+
+		  JarEntry entry = null;
+		  while((entry = zin.getNextJarEntry()) != null)
+		  {
+			   //读取源jar文件中的一个入口内容
+			   ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			   while(true)
+			   {
+					int read = zin.read(buffer);
+					if(read == -1)
+						 break;
+					bos.write(buffer, 0, read);
+			   }
+			   ByteArrayInputStream bais = new ByteArrayInputStream(bos.toByteArray());
+			   //写到目标jar文件中
+			   addToJar(out, bais, entry.getName(), bos.toByteArray().length);
+			   bos.close();
+			   zin.closeEntry();
+		  } // endwhile
+		  zin.close();
+		  isJar.close();
+	 }
+
+	 /**
+	  * 在给定的JarOutputStream中，添加一个新内容
+	  *@param out JarOutputStream
+	  *@param in  被添加的流
+	  *@param entryName 入口参数（一般为 包名/文件名 ）
+	  *@param length 输入长度
+	  */
+	 private void addToJar (JarOutputStream out, InputStream in, String entryName, long length)
+		  throws IOException
+	 {
+		  //System.out.println ("addToJar="+entryName) ;
+		  byte[] buf=new byte[2048];
+		  ZipEntry entry=new ZipEntry(entryName);
+		  CRC32 crc=new CRC32();
+		  entry.setSize(length);
+		  entry.setCrc(crc.getValue());
+		  out.putNextEntry(entry);
+		  int read=in.read(buf);
+		  while(read>0)
+		  {
+			   crc.update(buf, 0, read);
+			   out.write(buf, 0, read);
+			   read=in.read(buf);
+		  }
+		  entry.setCrc(crc.getValue());
+		  System.out.println("  adding = "+entry.getName()+" "+entry.getSize());
+		  in.close();
+		  out.closeEntry();
+	 }
+
+	 private void addToJarEncoded(JarOutputStream out, InputStreamReader isr, String entryName, long length)
+		  throws IOException
+	 {
+		  StringBuffer buffer = new StringBuffer();
+
+		  Reader reader = new BufferedReader(isr);
+		  int ch;
+		  while ((ch = reader.read()) > -1)
+		  {
+			   buffer.append((char)ch);
+		  }
+		  reader.close();
+		  isr.close();
+
+		  ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		  OutputStreamWriter osw = new OutputStreamWriter(baos,"UTF8");
+		  osw.write(buffer.toString());
+		  osw.flush();
+
+		  ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+
+		  addToJar(out,bais,entryName,length);
+	 }
+	 //////////////////////////////////////////////////
+	 class MyFileFilter implements FileFilter
+	 {
+		  String suffix = null ;
+		  public MyFileFilter (String suffix)
+		  {
+			   this.suffix = suffix.toUpperCase () ;
+		  }
+
+		  public boolean accept(File pathname)
+		  {
+			   if (pathname.isDirectory())
+					return true ;
+			   if (suffix==null||suffix.equals("*"))
+					return true ;
+			   if (pathname.getName().toUpperCase().endsWith(suffix))
+					return true ;
+			   return false ;
+		  }
+	 }
+
+
+	 private void addDirToJar (
+			   JarOutputStream out,
+			   String dirname,
+			   FileFilter filter,
+			   String direntry,
+			   boolean recrusive)
+		  throws IOException
+	 {
+		  File f = new File (dirname) ;
+		  if (!f.isDirectory())
+			   throw new RuntimeException ("addDirToJar error,the ["+dirname+"] is not a directory!") ;
+
+		  File[] sufs = f.listFiles (filter) ;
+		  for (int i = 0 ; i < sufs.length ; i ++)
+		  {
+			   if (sufs[i].isFile())
+					addToJar (out, new FileInputStream(sufs[i]), direntry+"/"+sufs[i].getName(),sufs[i].length()) ;
+			   else if (sufs[i].isDirectory()&&recrusive)
+					addDirToJar (
+						 out,
+						 dirname+File.separatorChar+sufs[i].getName(),
+						 filter,
+						 direntry+"/"+sufs[i].getName(),
+						 recrusive) ;
+		  }
+	 }
+
+
+	 public void pack (String targetfile)
+		  throws ConfigureException,IOException
+	 {
+		  if (targetfile==null||targetfile.equals(""))
+		  {
+			   int k = workshopFile.indexOf ('.') ;
+			   targetfile = workshopFile.substring(0,k)+".jar" ;
+		  }
+		  File jar = new File (targetfile) ;
+		  JarOutputStream out = new JarOutputStream(new FileOutputStream(jar));
+		  //add xml info first
+		  String tmps = Configuration.getPathProperty ("workshop.info.dir",workshopFile) ;;
+		  File f = new File (tmps) ;
+		  try
+		  {
+			   //addToArchive (zop,f,null,filenames[j],0) ;
+			   addToJar(out, new FileInputStream(f), "workshop/"+workshopFile, f.length());
+		  }
+		  catch(IOException ioe)
+		  {
+			   throw new RuntimeException ("Add workshop info xml file error!\n----Please check file "+workshopFile) ;
+		  }
+
+		  String[] appnames = xpath.getAll ("/myfiles@appname") ;
+		  for (int i = 0 ; i < appnames.length ; i ++)
+		  {
+			   String[] filenames = xpath.getAll ("/myfiles[@appname="+appnames[i]+"]/rf@path") ;
+
+			   for (int j = 0 ; j < filenames.length ; j ++)
+			   {
+					String type = xpath.get ("/myfiles[@appname="+appnames[i]+"]/rf["+(j+1)+"]@type") ;
+					tmps = Configuration.getPathProperty (appnames[i],filenames[j]) ;
+					try
+					{
+						 if ("dir".equals(type))
+						 {
+							  MyFileFilter mff = null ;
+							  String suffix = xpath.get ("/myfiles[@appname="+appnames[i]+"]/rf["+(j+1)+"]@suffix") ;
+							  if (suffix!=null&&!suffix.equals(""))
+								   mff = new MyFileFilter (suffix) ;
+							  addDirToJar (out,tmps,mff,appnames[i]+"|"+filenames[j],true) ;
+						 }
+						 else
+						 {//file
+							  f = new File (tmps) ;
+							  //addToArchive (zop,f,null,filenames[j],0) ;
+							  addToJar(out, new FileInputStream(f), appnames[i]+"|"+filenames[j], f.length());
+						 }
+					}
+					catch(IOException ioe)
+					{
+						 System.out.println ("skip beacuse io error="+ioe.toString()) ;
+					}
+			   }
+		  }
+		  out.close () ;
+	 }
+
+	 public static void unpack (String jarfile)
+		  throws IOException,ConfigureException
+	 {
+		  JarInputStream jis = new JarInputStream(new FileInputStream (new File(jarfile))) ;
+		  JarEntry je = jis.getNextJarEntry () ;
+		  if (je==null)
+			   throw new RuntimeException ("Cannot get first entry which could be workshop xml file!") ;
+		  if (!je.getName().startsWith("workshop/"))
+			   throw new RuntimeException ("Get first entry but it is not workshop xml file!") ;
+		  //save workshop file first
+		  int p = je.getName().indexOf ('/') ;
+		  String wsname = je.getName().substring (p+1) ;
+		  String abswsname = Configuration.getPathProperty ("workshop.info.dir",wsname) ;
+		  saveToFile (abswsname,jis) ;
+		  jis.closeEntry () ;
+
+		  XPathWorker newxpath = XPathWorker.getXPath (abswsname) ;
+
+		  if (!checkValidate (newxpath))
+		  {
+			   recoverFile (abswsname) ;
+			   return ;
+		  }
+
+		  while ((je=jis.getNextJarEntry())!=null)
+		  {
+			   String ename = je.getName() ;
+
+			   p = ename.indexOf ('|') ;
+			   if (p<=0)
+			   {
+					System.out.println ("Worning:the entry=["+ename+"]has no app name--skipped!") ;
+					break ;
+			   }
+			   String appname = ename.substring (0,p) ;
+			   String entryname = ename.substring (p+1) ;
+			   String ss = Configuration.getProperty (appname) ;
+			   if (ss!=null)
+			   {
+					String apspath = Configuration.getPathProperty(appname,entryname) ;
+					System.out.println ( "extracting "+ename) ;
+					saveToFile (apspath,jis) ;
+			   }
+			   else
+					System.out.println ("Worning:the appname=["+appname+"]is not existed in your platform--skipped!") ;
+			   jis.closeEntry();
+		  }
+		  jis.close () ;
+	 }
+
+	 public static void checkBaseInfo (String jarfile)
+		  throws Throwable
+	 {
+		  JarInputStream jis = null ;
+		  try
+		  {
+			   jis = new JarInputStream(new FileInputStream (new File(jarfile))) ;
+			   JarEntry je = jis.getNextJarEntry () ;
+			   if (je==null)
+					throw new RuntimeException ("Cannot get first entry which could be workshop xml file!") ;
+			   if (!je.getName().startsWith("workshop/"))
+					throw new RuntimeException ("Get first entry but it is not workshop xml file!") ;
+			   XPathWorker xpath = new XPathWorker (jis) ;
+			   Element ele = xpath.getElement ("/base[1]") ;
+			   if (ele==null)
+			   {
+					System.out.println ("No base info!") ;
+					return ;
+			   }
+			   System.out.println ("name="+ele.getAttribute("name")) ;
+			   System.out.println ("project="+ele.getAttribute("project")) ;
+			   System.out.println ("author="+ele.getAttribute("author")) ;
+			   System.out.println ("email="+ele.getAttribute("email")) ;
+			   //String packtstr = ele.getAttribute("packtime") ;
+			   //if (packtstr==null||packtstr
+			   //System.out.println ("packtime="+) ;
+
+			   String desc = xpath.get ("/base[1]/description") ;
+			   System.out.println ("------------desc----------\n"+desc) ;
+			   System.out.println ("--------------------------") ;
+		  }
+		  finally
+		  {
+			   //jis.closeEntry () ;
+
+			   jis.close () ;
+		  }
+	 }
+
+	 private Vector workshopList (XPathWorker xpath)
+		  throws ConfigureException
+	 {
+		  Vector v = new Vector () ;
+		  String[] appnames = xpath.getAll ("/myfiles@appname") ;
+		  for (int i = 0 ; i < appnames.length ; i ++)
+		  {
+			   String[] filenames = xpath.getAll ("/myfiles[@appname="+appnames[i]+"]/rf@path") ;
+			   for (int j = 0 ; j < filenames.length ; j ++)
+					v.addElement (new WorkshopItem(filenames[j],appnames[i],null)) ;
+		  }
+		  return v ;
+	 }
+	 /**
+	  *
+	  */
+	 private static void createDir (String filename)
+		  throws IOException
+	 {
+		  File f = new File (filename) ;
+		  File fp = f.getParentFile ();
+		  fp.mkdirs () ;
+	 }
+
+	 private static void saveToFile (String filename,JarInputStream jis)
+		  throws IOException
+	 {//System.our.println ("") ;
+		  createDir (filename) ;
+		  //backupFile (filename) ;
+		  FileOutputStream fos = new FileOutputStream (new File (filename)) ;
+		  byte[] buf=new byte[2048];
+
+		  while(true)
+		  {
+			   int read = jis.read(buf);
+			   if(read == -1)
+					break;
+			   fos.write(buf, 0, read);
+		  }
+
+		  fos.close () ;
+	 }
+
+	 private static void backupFile (String filename)
+		  throws IOException
+	 {
+		  File fin = new File (filename) ;
+		  if (!fin.exists())
+			   return ;
+		  File fout = new File (filename+".wks") ;
+		  copy(fin, fout) ;
+	 }
+
+	 private static void recoverFile (String filename)
+		  throws IOException
+	 {
+		  File fout = new File (filename) ;
+		  File fin = new File (filename+".wks") ;
+		  if (!fin.exists())
+			   return ;
+		  copy(fin, fout) ;
+	 }
+
+	 private static boolean checkValidate (XPathWorker xpath)
+	 {//using some block mechnism to vertify work shop info
+		  return true ;
+	 }
+
+	 class WorkshopItem
+	 {
+		  String path ;
+		  String appname ;
+		  String type ;
+
+		  Vector lostFiles = null ;
+
+		  public WorkshopItem (String path,String appname,String type)
+		  {
+			   this.path = path ;
+			   this.appname = appname ;
+			   this.type = type ;
+		  }
+
+		  public void addLostFilePath (String path)
+		  {
+			   if (lostFiles==null)
+					lostFiles = new Vector () ;
+			   lostFiles.addElement (path) ;
+		  }
+
+		  public Vector getLostFilePath ()
+		  {
+			   return lostFiles ;
+		  }
+
+		  public String getPath ()
+		  {
+			   return path ;
+		  }
+
+		  public String getAppName ()
+		  {
+			   return appname ;
+		  }
+
+		  public String getType ()
+		  {
+			   return type ;
+		  }
+	 }
+	 /////////////////
+	 public void test (String infofile)
+		  throws ConfigureException,IOException
+	 {
+		  int k = infofile.indexOf ('.') ;
+		  ZipOutputStream zop = makeNewArchive (infofile.substring(0,k)+".zip") ;
+		  String[] appnames = xpath.getAll ("/myfiles@appname") ;
+		  for (int i = 0 ; i < appnames.length ; i ++)
+		  {
+			   String[] filenames = xpath.getAll ("/myfiles[@appname="+appnames[i]+"]/rf@path") ;
+
+			   for (int j = 0 ; j < filenames.length ; j ++)
+			   {
+					String tmps = Configuration.getPathProperty (appnames[i],filenames[j]) ;
+					File f = new File (tmps) ;
+					try
+					{
+						 addToArchive (zop,f,null,filenames[j],0) ;
+					}
+					catch(IOException ioe)
+					{
+						 System.out.println ("skip beacuse io error="+ioe.toString()) ;
+					}
+			   }
+		  }
+		  zop.close () ;
+	 }
+
+	 public void test1 (String infofile)
+		  throws ConfigureException,IOException
+	 {
+		  int k = infofile.indexOf ('.') ;
+		  File jar = new File (infofile.substring(0,k)+".jar") ;
+		  JarOutputStream out = new JarOutputStream(new FileOutputStream(jar));
+
+		  String[] appnames = xpath.getAll ("/myfiles@appname") ;
+		  for (int i = 0 ; i < appnames.length ; i ++)
+		  {
+			   String[] filenames = xpath.getAll ("/myfiles[@appname="+appnames[i]+"]/rf@path") ;
+
+			   for (int j = 0 ; j < filenames.length ; j ++)
+			   {
+					String tmps = Configuration.getPathProperty (appnames[i],filenames[j]) ;
+					File f = new File (tmps) ;
+					try
+					{
+						 //addToArchive (zop,f,null,filenames[j],0) ;
+						 addToJar(out, new FileInputStream(f), filenames[j], f.length());
+					}
+					catch(IOException ioe)
+					{
+						 System.out.println ("skip beacuse io error="+ioe.toString()) ;
+					}
+			   }
+		  }
+		  out.close () ;
+	 }
+
+	 public static String test2 (String jarfile,String entryName)
+		  throws IOException
+	 {
+		  JarInputStream jis = new JarInputStream(new FileInputStream (new File(jarfile))) ;
+		  JarEntry je = null ;
+		  while ((je=jis.getNextJarEntry())!=null)
+		  {System.out.println (je.getName()) ;
+			   if (je.getName().equals(entryName))
+			   {
+					StringBuffer sb = new StringBuffer () ;
+					byte[] buf=new byte[2048];
+					int i = 0 ;
+					int rl ;
+					while((rl=jis.read(buf,i*buf.length,buf.length))>0)
+					{
+						 i ++ ;
+						 sb.append (new String(buf,0,rl)) ;
+						 if (rl<buf.length)
+							  break ;
+					}
+					jis.close () ;
+					return sb.toString () ;
+			   }
+			   jis.closeEntry();
+		  }
+		  jis.close () ;
+		  return null ;
+	 }
+
+	 private static void printHelp ()
+	 {
+		  System.out.println ("------------------------pack/unpack--------------------------") ;
+		  System.out.println ("*please input two param: -pack[-unpack,-p,-up,-ch] filename.           *") ;
+		  System.out.println ("*    if you pack your file :xxx.bat -pack yyy.xml [target]  *") ;
+		  System.out.println ("*        对于.xml文件，不用写路径(for .xml file,no path)   *") ;
+		  System.out.println ("*        如果没写target，则生成yyy.jar                     *") ;
+		  System.out.println ("*    if you unpack your file :xxx.bat -unpack [path]yyy.jar *") ;
+		  System.out.println ("*    if you check  your file :xxx.bat -ch [path]yyy.jar     *") ;
+		  System.out.println ("-----------------------------------------------------") ;
+	 }
+
+	 public static void main (String[] args)
+	 {
+		  try
+		  {
+			   if (args.length<2)
+			   {
+					printHelp () ;
+					return ;
+			   }
+
+			   if ("-pack".equalsIgnoreCase(args[0])||"-p".equalsIgnoreCase(args[0]))
+			   {
+					if (!args[1].toLowerCase().endsWith(".xml"))
+					{
+						 System.out.println ("必须使用xml文件！") ;
+						 return ;
+					}
+
+					if (args[1].indexOf('\\')>=0||args[1].indexOf('/')>=0)
+					{
+						 System.out.println ("没有必要写路径!") ;
+						 return ;
+					}
+
+					String tarfile = null ;
+					if (args.length>=3)
+					{
+						 if (!args[2].toLowerCase().endsWith(".jar"))
+						 {
+							  System.out.println ("目标文件必须以.jar结尾！") ;
+							  return ;
+						 }
+						 tarfile = args[2] ;
+					}
+
+					FileSupporter fs = new FileSupporter (args[1]) ;
+					fs.pack (tarfile) ;
+			   }
+			   else if ("-unpack".equalsIgnoreCase(args[0])||"-up".equalsIgnoreCase(args[0]))
+			   {
+					FileSupporter.unpack (args[1]) ;
+			   }
+			   else if ("-ch".equalsIgnoreCase(args[0]))
+			   {
+					FileSupporter.checkBaseInfo (args[1]) ;
+			   }
+			   else
+			   {
+					printHelp () ;
+					return ;
+			   }
+
+
+			   //fs.test1 (args[0]) ;
+			   //System.out.println (test2(args[0],args[1])) ;
+		  }
+		  catch(Throwable e)
+		  {
+			   e.printStackTrace () ;
+		  }
+	 }
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Gdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://jasonzhu/db_xml_conf.xsd">
+	<XORM name="#UserExtDef" class="com.dw.user.UserExtItemDefault"/>
+	
+  <Module name="SecurityUserExt" desc="">
+
+    
+  </Module>
+  
+</Gdb>

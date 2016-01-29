@@ -1,0 +1,1 @@
+select_identity=select LAST_INSERT_ID()

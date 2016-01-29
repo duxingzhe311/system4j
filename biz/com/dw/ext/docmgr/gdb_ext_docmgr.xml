@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Gdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://jasonzhu/db_xml_conf.xsd">
+	<Module name="DocMgr" desc="">
+		<Func name="GetDocItemByDocId" desc="">
+			<InParam name="@DocId" type="Int64"/>
+			<InParam name="$DocItemTable"/>
+			<InParam name="$DocFileItemTable"/>
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select * from [$DocItemTable] d left join [$DocFileItemTable] f on 
+(f.DocId=d.DocId and f.ModifyDate=(select max(ModifyDate) from case_doc_files where DocId=d.DocId))
+where d.DocId=[@DocId]
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		<Func name="ListDocItemByWhereStr" desc="">
+			<InParam name="$DocItemTable"/>
+			<InParam name="$DocFileItemTable"/>
+			<InParam name="$WhereStr"/>
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select * from [$DocItemTable] d left join [$DocFileItemTable] f on 
+(f.DocId=d.DocId and f.ModifyDate=(select max(ModifyDate) from [$DocFileItemTable] f1 where f1.DocId=d.DocId))
+{where [$WhereStr]}
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		<Func name="GetFileByUserNameAndState" desc="">
+      		<InParam name="@State" type="Int32" />
+      		<InParam name="@LockUserName" />
+      		<Content_For_DB>
+				<Sql exe_type="select">
+					select * from [$DocItemTable] d left join [$DocFileItemTable] f on 
+(f.DocId=d.DocId and f.ModifyDate=(select max(ModifyDate) from case_doc_files where DocId=d.DocId))
+where d.LockUserName=[@LockUserName] and d.State=[@State]
+				</Sql>
+			</Content_For_DB>
+    </Func>
+    <Func name="UpdateFileVer" desc="" exe_type="nonquery">
+      <InParam name="@Version" />
+      <InParam name="@FileId" type="Int64" />
+      <Content_For_DB>
+				<Sql exe_type="update">
+      update wb_docmgr_file_item
+set Version=[@Version] where FileId=[@FileId]</Sql>
+		</Content_For_DB>
+    </Func>
+    
+    <Func name="UpdateDocState" desc="" exe_type="nonquery">
+      <InParam name="@DocId" type="Int64" />
+      <InParam name="$DocItemTable"/>
+      <InParam name="@OldState" type="Int32" nullable="true" />
+      <InParam name="@State" type="Int32" />
+      <InParam name="@LockUserName" />
+      <Content_For_DB>
+      <Sql exe_type="update">
+	update [$DocItemTable] set State=[@State],LockUserName=[@LockUserName] where DocId=[@DocId]
+	</Sql>
+	</Content_For_DB>
+    </Func>
+    <Func name="ChangeDocItemName" desc="" exe_type="nonquery">
+      <InParam name="@DocId" type="Int64" />
+      <InParam name="$DocItemTable"/>
+      <InParam name="@DocFileName"/>
+      <Content_For_DB>
+      <Sql exe_type="update">
+	update [$DocItemTable] set DocFileName=[@DocFileName] where DocId=[@DocId]
+	</Sql>
+	</Content_For_DB>
+    </Func>
+    
+	</Module>
+</Gdb>

@@ -1,0 +1,222 @@
+<!DOCTYPE databases PUBLIC "-//EXOLAB/Castor Mapping DTD Version 1.0//EN" "http://castor.exolab.org/mapping.dtd">
+
+<mapping>
+
+  <!--  Mapping for JwmaConfiguration  -->
+  <class name="com.dw.comp.mail.config.WBMailConfiguration">
+    <map-to xml="mail"/>
+    <description>Default mapping for the JwmaConfiguration</description>
+
+    <field name="Security" type="com.dw.comp.mail.config.Security">
+      <bind-xml name="security"/>
+    </field>
+
+    <field name="MTA" type="com.dw.comp.mail.config.MailTransportAgent">
+      <bind-xml name="mta"/>
+    </field>
+
+    <field name="PostOfficeCollection" type="com.dw.comp.mail.config.PostOffice"
+           collection="collection">
+      <bind-xml name="postoffice"/>
+    </field>
+    
+    <field name="FolderMap" type="com.dw.comp.mail.config.FolderMap">
+      <bind-xml name="folder_map"/>
+    </field>
+
+    <field name="I18N" type="com.dw.comp.mail.config.Internationalization">
+      <bind-xml name="internationalization"/>
+    </field>
+
+    <field name="Administration" type="com.dw.comp.mail.config.Administration">
+      <bind-xml name="administration"/>
+    </field>
+
+    <field name="PostOfficeAllowOverride" type="boolean">
+      <bind-xml name="postofficeallowoverride" node="element"/>
+    </field>
+
+     <field name="AccountCreationEnabled" type="boolean"
+            get-method="isAccountCreationEnabled"
+            set-method="setAccountCreationEnabled">
+      <bind-xml name="auto-create-account" node="element"/>
+    </field>
+
+    <field name="DefaultMessageProcessor" type="string" required="true">
+      <bind-xml name="default-message-processor" node="element"/>
+    </field>
+
+    <field name="PreferencePersistencePlugin" type="string">
+      <bind-xml name="preferencepersistence-plugin" node="element"/>
+    </field>
+
+    <field name="ContactManagementPlugin" type="string">
+      <bind-xml name="contactmanagement-plugin" node="element"/>
+    </field>
+
+    <field name="RandomAppendPlugin" type="string">
+      <bind-xml name="randomappend-plugin" node="element"/>
+    </field>
+
+  </class>
+
+  <!--  Mapping for PostOffice  -->
+  <class name="com.dw.comp.mail.config.PostOffice">
+    <map-to xml="postoffice"/>
+    <description>Default mapping for the PostOffice</description>
+
+    <field name="Name" type="string" required="true">
+      <bind-xml name="name" node="attribute"/>
+    </field>
+
+
+    <field name="Default" type="boolean" get-method="isDefault"
+           set-method="setDefault">
+      <bind-xml name="default" node="attribute"/>
+    </field>
+
+    <field name="Type" type="string">
+      <bind-xml name="type" node="attribute"/>
+    </field>
+
+    <field name="Secure" type="boolean" get-method="isSecure"
+           set-method="setSecure">
+      <bind-xml name="secure" node="attribute"/>
+    </field>
+
+    <field name="Protocol" type="string">
+      <bind-xml name="protocol" node="element"/>
+    </field>
+
+    <field name="Address" type="string" required="true">
+      <bind-xml name="address" node="element"/>
+    </field>
+
+    <field name="Port" type="integer">
+      <bind-xml name="port" node="element"/>
+    </field>
+
+    <field name="RootFolder" type="string">
+      <bind-xml name="rootfolder" node="element"/>
+    </field>
+
+    <field name="ReplyToDomain" type="string">
+      <bind-xml name="replyto-domain" node="element"/>
+    </field>
+
+	<field name="Sign" type="string">
+      <bind-xml name="sign" node="element"/>
+    </field>
+  </class>
+  
+  
+  <class name="com.dw.comp.mail.config.FolderMap">
+    <map-to xml="folder_map"/>
+    <description>Default mapping for the folder</description>
+
+    <field name="DraftFolderName" type="string">
+      <bind-xml name="draft" node="element"/>
+    </field>
+
+    <field name="TrashFolderName" type="string">
+      <bind-xml name="trash" node="element"/>
+    </field>
+
+    <field name="SentFolderName" type="string">
+      <bind-xml name="sent" node="element"/>
+    </field>
+
+  </class>
+
+  <!--  Mapping for MailTransportAgent  -->
+  <class name="com.dw.comp.mail.config.MailTransportAgent">
+    <map-to xml="mta"/>
+    <description>Default mapping for the MailTransportAgent</description>
+
+    <field name="Name" type="string" required="true">
+      <bind-xml name="name" node="attribute"/>
+    </field>
+
+    <field name="authenticated" type="boolean" get-method="isAuthenticated"
+           set-method="setAuthenticated">
+      <bind-xml name="authenticated" node="attribute"/>
+    </field>
+
+    <field name="Secure" type="boolean" get-method="isSecure"
+           set-method="setSecure">
+      <bind-xml name="secure" node="attribute"/>
+    </field>
+
+    <field name="Protocol" type="string">
+      <bind-xml name="protocol" node="element"/>
+    </field>
+
+    <field name="Address" type="string" required="true">
+      <bind-xml name="address" node="element"/>
+    </field>
+
+    <field name="Port" type="integer">
+      <bind-xml name="port" node="element"/>
+    </field>
+
+  	<field name="TransportLimit" type="integer">
+      <bind-xml name="transport-limit" node="element"/>
+    </field>
+    
+    <field name="SystemAccount" type="string">
+      <bind-xml name="system_account" node="element"/>
+    </field>
+    
+    <field name="SystemPsw" type="string">
+      <bind-xml name="system_psw" node="element"/>
+    </field>
+  </class>
+
+  <!--  Mapping for Administration  -->
+  <class name="com.dw.comp.mail.config.Administration">
+    <map-to xml="administration"/>
+    <description>Default mapping for the Administration class</description>
+
+    <field name="Enabled" type="boolean" get-method="isEnabled"
+           set-method="setEnabled" required="true">
+      <bind-xml name="enabled" node="attribute"/>
+    </field>
+
+    <field name="AdminList" type="string">
+      <bind-xml name="admins" node="element"/>
+    </field>
+
+  </class>
+
+   <!--  Mapping for Internationalization  -->
+  <class name="com.dw.comp.mail.config.Internationalization">
+    <map-to xml="internationalization"/>
+    <description>Default mapping for the Internalization class</description>
+
+
+    <field name="SystemLanguage" type="string">
+      <bind-xml name="system-language" node="element"/>
+    </field>
+
+    <field name="DefaultViewLanguage" type="string">
+      <bind-xml name="default-view-language" node="element"/>
+    </field>
+
+    <field name="ViewLanguageList" type="string">
+      <bind-xml name="view-languages" node="element"/>
+    </field>
+
+  </class>
+
+   <!--  Mapping for Security  -->
+  <class name="com.dw.comp.mail.config.Security">
+    <map-to xml="security"/>
+    <description>Default mapping for the Security class</description>
+
+    <field name="SecureSocketFactory" type="string">
+      <bind-xml name="secure-socket-factory" node="element"/>
+    </field>
+
+  </class>
+
+</mapping>

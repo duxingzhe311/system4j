@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Gdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://jasonzhu/db_xml_conf.xsd">
+	
+	<XORM name="#GridClientItem" class="com.dw.grid.GridClientItem"/>
+	<XORM name="#GridClientCat" class="com.dw.grid.GridClientCat"/>
+	<XORM name="#GridDefItem" class="com.dw.grid.GridDefOneItem"/>
+	
+	<Module name="Grid" desc="">
+		<Func name="ListNotifyItem" desc="">
+			<InParam name="@TarUserName"/>
+			<InParam name="$States"/>
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select #NotifyItem.pk_nor_cols from #NotifyItem.table_name
+					where TarUserName=[@TarUserName] and State in ([$States])
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		
+	</Module>
+</Gdb>

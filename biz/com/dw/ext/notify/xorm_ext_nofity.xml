@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Gdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://jasonzhu/db_xml_conf.xsd">
+	
+	<XORM name="#NotifyItem" class="com.dw.ext.notify.NotifyItem"/>
+	
+	<Module name="Notify" desc="">
+		<Func name="ListNotifyItem" desc="">
+			<InParam name="@TarUserName"/>
+			<InParam name="$States"/>
+			<InParam name="@CurDT" type="DateTime"/>
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select #NotifyItem.pk_nor_cols from #NotifyItem.table_name
+					where TarUserName=[@TarUserName] and
+					(State in ([$States]) or (TimeOutDate is not null and TimeOutDate&gt;[@CurDT]))
+					order by SentDate desc
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="UpdateNotifyItemState" desc="">
+			<InParam name="@NotifyId" type="Int64"/>
+			<InParam name="@TarUserName"/>
+			<InParam name="@State" type="Int32"/>
+			<Content_For_DB>
+				<Sql exe_type="update">
+					update #NotifyItem.table_name set State=[@State]
+					where AutoId=[@NotifyId] and TarUserName=[@TarUserName]
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="SetReadNotifyItemState" desc="">
+			<InParam name="@NotifyId" type="Int64"/>
+			<InParam name="@TarUserName"/>
+			<InParam name="@State" type="Int32"/>
+			<InParam name="@ReadDate" type="Date"/>
+			<Content_For_DB>
+				<Sql exe_type="update">
+					update #NotifyItem.table_name set State=[@State],ReadDate=[@ReadDate]
+					where AutoId=[@NotifyId] and TarUserName=[@TarUserName]
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+	</Module>
+</Gdb>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Gdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://jasonzhu/db_xml_conf.xsd">
+	
+	<Module name="AppMail_Inner" desc="">
+		<!--根据输入的条件获得进程表中的垫付费用记录信息-->
+		
+		<Func name="GetById" desc="">
+			<InParam name="@MailId" type="Int64"/>
+			<InParam name="@UserName" nullable="true"/>
+			<Content_For_DB>
+				<Sql>
+					SELECT * from mail_inbox where mail_id=[@MailId]{ and repository_name=[@UserName]}
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="ListByUser" desc="">
+			<InParam name="@UserName"/>
+			<InParam name="@StartD" type="DateTime"/>
+			<InParam name="@EndD"  type="DateTime"/>
+			<InParam name="$StateStr"  nullable="true"/>
+			<Content_For_DB>
+				<Sql>
+					select mail_id,message_name,message_state, error_message, sender, recipients,
+						remote_host, remote_addr, last_updated,state,title,mail_size,mail_attach_num,mail_level
+					from mail_inbox
+					where repository_name=[@UserName]{ and last_updated&gt;=[@StartD]}{ and last_updated&lt;=[@EndD]}
+					{and state in ([$StateStr])} order by last_updated desc
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		
+		<Func name="UpdateSt" desc="">
+			<InParam name="@state" type="Int32"/>
+			<InParam name="@MailId" type="Int64"/>
+			<InParam name="@UpDate" type="DateTime"/>
+			<InParam name="@UserName" nullable="true"/>
+			<Content_For_DB>
+				<Sql>
+					update mail_inbox set state=[@state],state_updated=[@UpDate] where mail_id=[@MailId]{ and repository_name=[@UserName]}
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		
+		<Func name="RecoverSt" desc="">
+			<InParam name="@state" type="Int32"/>
+			<InParam name="$MailIdsStr"/>
+			<InParam name="@UserName" nullable="true"/>
+			<Content_For_DB>
+				<Sql>
+					update mail_inbox set state=[@state] where mail_id in ([$MailIdsStr]){ and repository_name=[@UserName]}
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		
+		<Func name="DelById" desc="">
+			<InParam name="@MailId" type="Int64"/>
+			<InParam name="@UserName" nullable="true"/>
+			<Content_For_DB>
+				<Sql>
+					delete from mail_inbox where mail_id=[@MailId]{ and repository_name=[@UserName]}
+				</Sql>
+			</Content_For_DB>
+		</Func>
+	</Module>
+
+</Gdb>

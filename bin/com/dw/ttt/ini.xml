@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="gb2312"?>
+<ini name="test" chname="测试">
+  <xevent>
+	<events>
+	  <event class="com.css.ttt.TTTEvent" remote="true" />
+	  <event class="com.css.ttt.TTTEvent1" style="ASYN_MONO" remote="true" />
+	</events>
+	<listeners>
+	  <listener class="com.css.ttt.TTTLis"
+					  ingoreOtherException="true"
+					  maskSelfException="false"
+					  acceptRemote="true"
+					  ordernum="1">
+		 <event class="com.css.ttt.TTTEvent"/>
+	  </listener>
+	  <listener class="com.css.ttt.TTTLis1"
+					  ingoreOtherException="true"
+					  maskSelfException="false"
+					  acceptRemote="true"
+					  ordernum="3">
+		 <event class="com.css.ttt.TTTEvent1"/>
+	  </listener>
+	  <listener class="com.css.ttt.TTTLis2"
+					  ingoreOtherException="true"
+					  maskSelfException="false"
+					  acceptRemote="true"
+					  ordernum="2">
+	  </listener>
+	</listeners>
+  </xevent>
+  <wfengine>
+    <applications>
+	  <Application Id="enterOrder">
+               <FormalParameters>
+                  <FormalParameter Id="orderInfoIn" Index="1" Mode="IN">
+                     <DataType>
+                        <DeclaredType Id="Order"/>
+                     </DataType>
+                  </FormalParameter>
+                  <FormalParameter Id="orderNumber" Index="2" Mode="OUT">
+                     <DataType>
+                        <BasicType Type="INTEGER"/>
+                     </DataType>
+                  </FormalParameter>
+               </FormalParameters>
+            </Application>
+    </applications>
+  </wfengine>
+</ini>

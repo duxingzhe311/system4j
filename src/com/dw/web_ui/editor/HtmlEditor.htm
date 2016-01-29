@@ -1,0 +1,195 @@
+<div id='MyWebEditor_Page' class='CssWebEditorPage'></div>
+<div style="PADDING-RIGHT:8px;WIDTH:100%;height:100%">
+	<input name="[#id_name#]" id="[#id_name#]" type="hidden" value="[#txt_val#]" />
+		<table height='100%' width='100%' class='CssWebEditor'>
+			<tr>
+				<td>
+					<div id='[#toolbar#]' runat="server" onselectstart='return false'>
+						<select onchange="MyWebEditor_SelectFormat(document.frames('[#frame_id#]'), this, 'FormatBlock');">
+							<option value='NULL' selected=selected>Format</option>
+							<option value='<P>'>Normal</option>
+							<option value='<PRE>'>Formatted</option>
+							<option value='<H1>'>Heading 1</option>
+							<option value='<H2>'>Heading 2</option>
+							<option value='<H3>'>Heading 3</option>
+							<option value='<H4>'>Heading 4</option>
+							<option value='<H5>'>Heading 5</option>
+							<option value='<H6>'>Heading 6</option>
+							<option value='<Address>'>Address</option>
+						</select>
+						<select onchange="MyWebEditor_SelectFormat(document.frames('[#frame_id#]'), this, 'FontName');">
+							<option value='NULL' selected="selected">Font</option>
+							<option value='Arial'>Arial</option>
+							<option value='Arial Black'>Arial Black</option>
+							<option value='Comic Sans MS'>Comic Sans MS</option>
+							<option value='Courier New'>Courier new</option>
+							<option value='Garamond'>Garamond</option>
+							<option value='Georgia'>Georgia</option>
+							<option value='Tahoma'>Tahoma</option>
+							<option value='Times New Roman'>Times New Roman</option>
+							<option value='Trebuchet MS'>Trebuchet MS</option>
+							<option value='Verdana'>Verdana</option>
+						</select>
+						<select onchange="MyWebEditor_SelectFormat(document.frames('[#frame_id#]'),this,'FontSize');">
+							<option value='NULL' selected>Size</option>
+							<option value='1'>1</option>
+							<option value='2'>2</option>
+							<option value='3'>3</option>
+							<option value='4'>4</option>
+							<option value='5'>5</option>
+							<option value='6'>6</option>
+							<option value='7'>7</option>
+						</select>
+						<span title='ForeColor' onclick="MyWebEditor_ShowColorPicker(this, document.frames('[#frame_id#]'), 'ForeColor')">
+							<img src='/system/ui/images/forecolor.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='BackColor' onclick="MyWebEditor_ShowColorPicker(this, document.frames('[#frame_id#]'), 'BackColor')">
+							<img src='/system/ui/images/backcolor.gif' border='0' align='absmiddle'>
+						</span>
+						<img src='/system/ui/images/separator.gif' align='absmiddle'>
+						<span title='Undo' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'Undo')">
+							<img src='/system/ui/images/undo.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Redo' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'Redo')">
+							<img src='/system/ui/images/redo.gif' border='0' align='absmiddle'>
+						</span>
+						<img src='/system/ui/images/separator.gif' align='absmiddle'>
+						<span title='Cut' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'Cut')">
+							<img src='/system/ui/images/cut.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Copy' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'Copy')">
+							<img src='/system/ui/images/copy.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Paste' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'Paste')">
+							<img src='/system/ui/images/paste.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Paste Text' onclick="MyWebEditor_PasteText(document.frames('[#frame_id#]'))">
+							<img src='/system/ui/images/pastetext.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Paste from Word' onclick="MyWebEditor_PasteWord(document.frames('[#frame_id#]'), document.getElementById('TmpDiv'))">
+							<img src='/system/ui/images/pasteword.gif' border='0' align='absmiddle'>
+						</span>
+						<img src='/system/ui/images/separator.gif' align='absmiddle'>
+						<span title='Create Link' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'CreateLink')">
+							<img src='/system/ui/images/link.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Unlink' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'Unlink')">
+							<img src='/system/ui/images/unlink.gif' border='0' align='absmiddle'>
+						</span>
+						<span style="[#insertimg_style#]" title='Insert Image' onclick="MyWebEditor_InsertImgPre(document.frames('[#frame_id#]'), document.getElementById('insert_img_dlg'),document.getElementById('ImageDiv'))">
+							<img src='/system/ui/images/image.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Insert Table' onclick="MyWebEditor_ShowTable(this, document.frames('[#frame_id#]'))">
+							<img src='/system/ui/images/table.gif' border='0' align='absmiddle'>
+						</span>
+						<img src='/system/ui/images/separator.gif' align='absmiddle'>
+						<span title='Bold' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'Bold')">
+							<img src='/system/ui/images/bold.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Italic' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'Italic')">
+							<img src='/system/ui/images/italic.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Underline' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'Underline')">
+							<img src='/system/ui/images/underline.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Strike through' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'StrikeThrough')">
+							<img src='/system/ui/images/StrikeThrough.gif' border='0' align='absmiddle'>
+						</span>
+						<img src='/system/ui/images/separator.gif' align='absmiddle'>
+						<span title='Super Script' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'SuperScript')">
+							<img src='/system/ui/images/SuperScript.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Sub Script' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'SubScript')">
+							<img src='/system/ui/images/SubScript.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Remove Format' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'RemoveFormat')">
+							<img src='/system/ui/images/removeformat.gif' border='0' align='absmiddle'>
+						</span>
+						<img src='/system/ui/images/separator.gif' align='absmiddle'>
+						<span title='Justify Left' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'JustifyLeft')">
+							<img src='/system/ui/images/justifyleft.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Justify Center' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'JustifyCenter')">
+							<img src='/system/ui/images/justifycenter.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Justify Right' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'JustifyRight')">
+							<img src='/system/ui/images/justifyright.gif' border='0' align='absmiddle'>
+						</span>
+						<img src='/system/ui/images/separator.gif' align='absmiddle'>
+						<span title='Outdent' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'Outdent')">
+							<img src='/system/ui/images/outdent.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Indent' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'Indent')">
+							<img src='/system/ui/images/indent.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Insert Ordered List' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'InsertOrderedList')">
+							<img src='/system/ui/images/number.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Insert Unordered List' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'InsertUnorderedList')">
+							<img src='/system/ui/images/symbol.gif' border='0' align='absmiddle'>
+						</span>
+						<img src='/system/ui/images/separator.gif' align='absmiddle'>
+						<span title='Insert Horizontal Rule' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'InsertHorizontalRule')">
+							<img src='/system/ui/images/hr.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Select All' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'SelectAll')">
+							<img src='/system/ui/images/selectall.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Unselect' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'Unselect')">
+							<img src='/system/ui/images/unselect.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Delete' onclick="MyWebEditor_Format(document.frames('[#frame_id#]'), 'Delete')">
+							<img src='/system/ui/images/delete.gif' border='0' align='absmiddle'>
+						</span>
+						<span title='Paste Code Block' onclick="MyWebEditor_PasteCodeBlock(document.frames('[#frame_id#]'))">
+							<img src='/system/ui/images/codeblock.gif' border='0' align='absmiddle'>
+						</span>		
+						<span style="[#emotion_style#]" title='Insert Emotion Pictures' onclick="MyWebEditor_ShowEmotionPics(this, document.frames('[#frame_id#]'))">
+							<img src='/system/ui/images/emotion.gif' border='0' align='absmiddle'>
+						</span>
+					</div>
+					<div id='TmpDiv' runat="server" style='VISIBILITY: hidden; OVERFLOW: hidden; POSITION: absolute; WIDTH: 1px; HEIGHT: 1px'></div>
+				</td>
+			</tr>
+			<tr height="100%">
+				<td height="300px">
+					<iframe id='[#frame_id#]' onfocus='editor_focused=this;MyWebEditor_ClosePage();' style="width:100%;height:100%" onblur="MyWebEditor_SaveValue(document.frames('[#frame_id#]'), document.getElementById('[#id_name#]'))" src="about:blank"></iframe>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<table cellpadding=0 cellspacing=0 border=0 onselectstart='return false' style='border-collapse:collapse;'>
+					<tr>
+						<td class='TabSelected'  onclick="MyWebEditor_SwitchMode([#frame_id#], this, document.getElementById('Toolbar'), 'Design')">
+							<img src='/system/ui/images/mode_design.gif' align='absmiddle'>Design&nbsp;
+						</td>
+						<td width='4px'></td>
+						<td class='Tab'  onclick="MyWebEditor_SwitchMode([#frame_id#], this, document.getElementById('Toolbar'), 'Html')">
+							<img src='/system/ui/images/mode_html.gif' align='absmiddle'>HTML&nbsp;
+						</td>
+						<td width='4px'></td>
+						<td class='Tab' onclick="MyWebEditor_SwitchMode([#frame_id#], this, document.getElementById('Toolbar'), 'Preview')">
+							<img src='/system/ui/images/mode_html.gif' align='absmiddle'>Preview&nbsp;
+						</td>
+					</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+		<script language='javascript'>
+			MyWebEditor_Init(document.frames['[#frame_id#]'], document.getElementById('[#id_name#]'), document.getElementById('[#toolbar#]'));
+		</script>
+</div>
+<table class="float" style="display:none;Z-INDEX:999;position:absolute;" id="insert_img_dlg">
+    <tr>
+    <td>
+        <div id=ImageDiv>&nbsp;</div>
+    </td>
+    </tr>
+    <tr>
+    <td>
+    <input type="button" name="accept_sm" value="È·¶¨" onclick="MyWebEditor_InsertImgOk(document.frames('[#frame_id#]'))"/>&nbsp;
+    <input type="button" name="not_accept_sm" value="Cancel" onclick="MyWebEditor_InsertImgCancel(document.frames('[#frame_id#]'))"/>
+    </td>
+    </tr>
+</table>

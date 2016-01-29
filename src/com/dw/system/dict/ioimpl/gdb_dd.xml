@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Gdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://jasonzhu/db_xml_conf.xsd">
+  <!-- XORM定义了名称之后,里面隐藏了如下变量
+    #xxx.all_cols //所有的列(包含主键和xorm_ext列)
+    #xxx.pk_col //主键列
+    #xxx.nor_cols //普通列(不包含主键和xorm_ext列的has_col=true列)
+    #xxx.pk_nor_cols //主键列和普通列
+    #xxx.table_name //表名称
+    除了这些变量之外,如果要做更复杂的sql,则必须知道XORM相关类的定义
+     如更新部分的普通列等.
+   -->
+   
+  
+  <XORM name="#DDNode" class="com.dw.system.dict.ioimpl.DBDDNode"/>
+  
+  <Install_For_DB table_names="">
+    
+  </Install_For_DB>
+  <Install_For_DB db_type="mysql">
+  	
+  </Install_For_DB>
+  <Install_For_DB db_type="sqlserver">
+  	
+  </Install_For_DB>
+  
+  <Module name="data_dict">
+  	<Func name="GetAllClassIds" desc="" pure_select="true">
+  		<InParam name="@ModuleName" nullable="true"/>
+		<Content_For_DB>
+			<Sql exe_type="select" if="@ModuleName==null or @ModuleName=&#34;&#34;">
+				select ClassId from #DDNode.table_name where ModuleName is null or ModuleName=''
+			</Sql>
+			<Sql exe_type="select" if="@ModuleName!=null and @ModuleName!=&#34;&#34;">
+				select ClassId from #DDNode.table_name where ModuleName=[@ModuleName]
+			</Sql>
+		</Content_For_DB>
+	</Func>
+	<Func name="GetAllNodesByClassId" desc="" pure_select="true">
+		<InParam name="@ClassId" type="Int32"/>
+		<InParam name="@ModuleName" nullable="true"/>
+		<Content_For_DB>
+			<Sql exe_type="select" if="@ModuleName==null or @ModuleName=&#34;&#34;">
+				select #DDNode.all_cols from #DDNode.table_name where ClassId=[@ClassId] and (ModuleName is null or ModuleName='')
+			</Sql>
+			<Sql exe_type="select" if="@ModuleName!=null and @ModuleName!=&#34;&#34;">
+				select #DDNode.all_cols from #DDNode.table_name where ClassId=[@ClassId] and ModuleName=[@ModuleName]
+			</Sql>
+		</Content_For_DB>
+	</Func>
+	<Func name="DelNode" desc="" pure_select="true">
+		<InParam name="@ClassId" type="Int32"/>
+		<InParam name="@NodeId" type="Int32"/>
+		<InParam name="@ModuleName" nullable="true"/>
+		<Content_For_DB>
+			<Sql if="@ModuleName==null or @ModuleName=&#34;&#34;">
+				delete from #DDNode.table_name where ClassId=[@ClassId] and NodeId=[@NodeId] and (ModuleName is null or ModuleName='')
+			</Sql>
+			<Sql if="@ModuleName!=null and @ModuleName!=&#34;&#34;">
+				delete from #DDNode.table_name where ClassId=[@ClassId] and NodeId=[@NodeId] and ModuleName=[@ModuleName]
+			</Sql>
+		</Content_For_DB>
+	</Func>
+	<Func name="SetDefaultNode" desc="" pure_select="true">
+		<InParam name="@ClassId" type="Int32"/>
+		<InParam name="@NodeId" type="Int32"/>
+		<InParam name="@ModuleName" nullable="true"/>
+		<Content_For_DB>
+			<Sql if="@ModuleName==null or @ModuleName=&#34;&#34;">
+				update #DDNode.table_name set IsDefault=0 where ClassId=[@ClassId] and (ModuleName is null or ModuleName='')
+			</Sql>
+			<Sql if="@ModuleName==null or @ModuleName=&#34;&#34;">
+				update #DDNode.table_name set IsDefault=1 where ClassId=[@ClassId] and NodeId=[@NodeId] and (ModuleName is null or ModuleName='')
+			</Sql>
+			<Sql if="@ModuleName!=null and @ModuleName!=&#34;&#34;">
+				update #DDNode.table_name set IsDefault=0 where ClassId=[@ClassId] and ModuleName=[@ModuleName]
+			</Sql>
+			<Sql if="@ModuleName!=null and @ModuleName!=&#34;&#34;">
+				update #DDNode.table_name set IsDefault=1 where ClassId=[@ClassId] and NodeId=[@NodeId] and ModuleName=[@ModuleName]
+			</Sql>
+		</Content_For_DB>
+	</Func>
+  </Module>
+</Gdb>

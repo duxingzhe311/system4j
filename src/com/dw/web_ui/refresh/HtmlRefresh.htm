@@ -1,0 +1,44 @@
+<iframe id="refresh_f_[#uid#]" frameborder="0" style="width:0;height:0">
+</iframe><textarea id='refresh_a_[#uid#]' style='display:none'>
+<!--
+var parent_refresh_ids = new Array([#ele_ids#]) ;
+function start_refresh()
+{
+	setTimeout("do_refresh()",[#interval#]);
+}
+
+function do_refresh()
+{
+	var len = parent_refresh_ids.length ;
+	var i;
+	var pri;
+	for(i = 0 ; i < len ; i ++)
+	{
+		pri = parent.document.getElementById(parent_refresh_ids[i]) ;
+		if(pri)
+		{
+			if(pri.tagName.toLowerCase()=='iframe')
+			{
+				if('true'==pri.getAttribute('stop_refresh'))
+					continue ;
+				pri.src = pri.src ;
+			}
+		}
+	}
+	setTimeout("do_refresh()",[#interval#]);
+}
+//-->
+</textarea>
+<script>
+<!--
+var cont_[#uid#] = document.getElementById('refresh_a_[#uid#]').value ;
+var shower_[#uid#] = document.getElementById('refresh_f_[#uid#]') ;
+var sh_doc_[#uid#] = shower_[#uid#].contentWindow.document;
+sh_doc_[#uid#].open();
+sh_doc_[#uid#].write("<script>");
+sh_doc_[#uid#].write(cont_[#uid#]);
+sh_doc_[#uid#].write("</script>");
+sh_doc_[#uid#].close();
+shower_[#uid#].contentWindow.start_refresh() ;
+//-->
+</script>

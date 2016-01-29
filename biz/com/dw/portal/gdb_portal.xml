@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Gdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://jasonzhu/db_xml_conf.xsd">
+
+	<XORM name="#Page"	class="com.dw.portal.Page" />
+	<XORM name="#PageBlock"	class="com.dw.portal.PageBlock" />
+	
+	<Module name="PortalMgr" desc="">
+	
+		<!--<Func name="listClientItems" desc="">
+			<InParam name="$username" nullable="true" />
+			<InParam name="$userphone" nullable="true" />
+			<Content_For_DB >
+			  <Sql exe_type="select">
+			    select #ClientItem.pk_nor_cols from #ClientItem.table_name 
+			    where 1=1 
+			    {and UserNameEx like '[$username]%'}
+			    {and Phone like '[$userphone]%'}
+			  </Sql>
+			</Content_For_DB>
+    	</Func>
+    	
+    	
+	--></Module>
+	
+</Gdb>

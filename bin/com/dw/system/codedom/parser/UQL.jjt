@@ -1,0 +1,474 @@
+options {
+  MULTI=true;
+  STATIC=false;
+  JAVA_UNICODE_ESCAPE = true;
+}
+
+PARSER_BEGIN(UQLTreeParser)
+
+package com.dw.system.codedom.parser;
+
+import java.io.StringReader;
+import java.io.*;
+import java.util.*;
+
+public class UQLTreeParser
+{
+    
+  
+  public static ASTExp parseExpToTree(String exp_str)
+  	throws Exception
+  {
+  	StringReader sr = new StringReader(exp_str);
+  	return parseExpToTree(sr);
+  }
+  
+  public static ASTExp parseExpToTree(StringReader sr)
+  	throws Exception
+  {
+  	
+  	UQLTreeParser utp = new UQLTreeParser(sr) ;
+  	return utp.Expression();
+  }
+  
+  public static ASTExp parseExpToTree(InputStream inps)
+  	throws Exception
+  {
+  	
+  	UQLTreeParser utp = new UQLTreeParser(inps) ;
+  	return utp.Expression();
+  }
+  
+  public static ASTCodeBlock parseCodeBlockToTree(String exp_str)
+  	throws Exception
+  {
+  	StringReader sr = new StringReader(exp_str);
+  	return parseCodeBlockToTree(sr);
+  }
+  
+  public static ASTCodeBlock parseCodeBlockToTree(StringReader sr)
+  	throws Exception
+  {
+  	
+  	UQLTreeParser utp = new UQLTreeParser(sr) ;
+  	return utp.Block();
+  }
+  
+  
+  public static ASTCodeBlock parseCodeBlockToTree(InputStream inps)
+  	throws Exception
+  {
+  	UQLTreeParser utp = new UQLTreeParser(inps) ;
+  	return utp.Block();
+  }
+}
+
+PARSER_END(UQLTreeParser)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+| <"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">
+}
+
+TOKEN: /*RESERVED TOKENS FOR UQL */
+{
+   <AND: "and">
+   |  <OR:  "or">
+   |  <USER: "user">
+   |  <ROLE: "role">
+   |  <ORG_UNIT: "orgunit">
+   |  <LPAREN: "(">
+   |  <RPAREN: ")">
+   |  <TRUE:"true">
+   |  <FALSE:"false">
+   |  <VAR: "var">
+   |  <IF: "if">
+   |  <ELSE: "else">
+   |< DOT: "." >
+   
+   |<NULL: "null">
+   |  <ASSIGN: "=" >
+| < GT: ">" >
+| < LT: "<" >
+| < BANG: "!" >
+| < TILDE: "~" >
+| < HOOK: "?" >
+| < COLON: ":" >
+| < EQ: "==" >
+| < LE: "<=" >
+| < GE: ">=" >
+| < NE: "!=" >
+| < SC_OR: "||" >
+| < SC_AND: "&&" >
+| < INCR: "++" >
+| < DECR: "--" >
+| < PLUS: "+" >
+| < MINUS: "-" >
+| < STAR: "*" >
+| < SLASH: "/" >
+| < BIT_AND: "&" >
+| < BIT_OR: "|" >
+| < XOR: "^" >
+| < REM: "%" >
+| < LSHIFT: "<<" >
+| < RSIGNEDSHIFT: ">>" >
+| < RUNSIGNEDSHIFT: ">>>" >
+| < PLUSASSIGN: "+=" >
+| < MINUSASSIGN: "-=" >
+| < STARASSIGN: "*=" >
+| < SLASHASSIGN: "/=" >
+| < ANDASSIGN: "&=" >
+| < ORASSIGN: "|=" >
+| < XORASSIGN: "^=" >
+| < REMASSIGN: "%=" >
+| < LSHIFTASSIGN: "<<=" >
+| < RSIGNEDSHIFTASSIGN: ">>=" >
+| < RUNSIGNEDSHIFTASSIGN: ">>>=" >
+}
+
+/* LITERALS */
+
+TOKEN :
+{
+  < INTEGER_LITERAL:
+        <DECIMAL_LITERAL> (["l","L","s","S"])?
+      | <HEX_LITERAL> (["l","L","s","S"])?
+      | <OCTAL_LITERAL> (["l","L","s","S"])?
+      | <BIN_LITERAL> (["l","L","s","S"])?
+  > /*以上的s后缀是java没有的，代表short*/
+|
+  < #DECIMAL_LITERAL: ["0"-"9"] (["0"-"9"])* >
+|
+  < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+|/*java 中没有*/
+  < #OCTAL_LITERAL: "0" ["o","O"] (["0"-"7"])+ >
+|/*java 中没有*/
+	< #BIN_LITERAL: "0" ["b","B"] (["0"-"1"])+ >
+|
+	
+  < FLOATING_POINT_LITERAL:
+        (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? (["f","F","d","D"])?
+      | "." (["0"-"9"])+ (<EXPONENT>)? (["f","F","d","D"])?
+      | (["0"-"9"])+ <EXPONENT> (["f","F","d","D"])?
+      | (["0"-"9"])+ (<EXPONENT>)? ["f","F","d","D"]
+  >
+|
+  < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+|
+  < CHARACTER_LITERAL:
+      "'"
+      (   (~["'","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )
+      "'"
+  >
+|
+  < STRING_LITERAL:
+      "\""
+      (   (~["\"","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )*
+      "\""
+  >
+}
+
+/*IDENTIFIERS*/
+TOKEN :
+{
+  < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+|
+  < #LETTER:
+      [
+       "\u0024",
+       "\u0041"-"\u005a",
+       "\u005f",
+       "\u0061"-"\u007a",
+       "\u00c0"-"\u00d6",
+       "\u00d8"-"\u00f6",
+       "\u00f8"-"\u00ff",
+       "\u0100"-"\u1fff",
+       "\u3040"-"\u318f",
+       "\u3300"-"\u337f",
+       "\u3400"-"\u3d2d",
+       "\u4e00"-"\u9fff",
+       "\uf900"-"\ufaff"
+      ]
+  >
+|
+  < #DIGIT:
+      [
+       "\u0030"-"\u0039",
+       "\u0660"-"\u0669",
+       "\u06f0"-"\u06f9",
+       "\u0966"-"\u096f",
+       "\u09e6"-"\u09ef",
+       "\u0a66"-"\u0a6f",
+       "\u0ae6"-"\u0aef",
+       "\u0b66"-"\u0b6f",
+       "\u0be7"-"\u0bef",
+       "\u0c66"-"\u0c6f",
+       "\u0ce6"-"\u0cef",
+       "\u0d66"-"\u0d6f",
+       "\u0e50"-"\u0e59",
+       "\u0ed0"-"\u0ed9",
+       "\u1040"-"\u1049"
+      ]
+  >
+}
+
+void Name() :
+/*
+ * A lookahead of 2 is required below since "Name" can be followed
+ * by a ".*" when used in the context of an "ImportDeclaration".
+ */
+{}
+{
+  <IDENTIFIER>
+  ( LOOKAHEAD(2) "." <IDENTIFIER>
+  )*
+}
+
+void NameList() :
+{}
+{
+  Name()
+  ( "," Name()
+  )*
+}
+
+/************************ dom节点定制***********/
+
+ASTCodeBlock Block() #CodeBlock:
+{}
+{
+  "{" ( BlockStatement() )* "}"
+  
+  { return jjtThis; }
+}
+
+void BlockStatement() #void:
+{}
+{
+  LocalVariableDeclaration() ";"
+|
+  Statement()
+}
+
+void LocalVariableDeclaration() #void:
+{}
+{
+  <VAR> VariableDeclarator() ( "," VariableDeclarator() )*
+}
+
+void VariableDeclarator() #VarDeclarator:
+{}
+{
+  item_var() [ "=" Expression() ]
+}
+
+/*
+ * Statement syntax follows.
+ */
+
+void Statement() #void:
+{}
+{
+  Block()
+|
+  EmptyStatement()
+|
+  Expression() ";"
+|
+  IfStatement()
+
+}
+
+void EmptyStatement() #void:
+{}
+{
+  ";"
+}
+
+void IfStatement() #CodeIf:
+/*
+ * The disambiguating algorithm of JavaCC automatically binds dangling
+ * else's to the innermost if statement.  The LOOKAHEAD specification
+ * is to tell JavaCC that we know what we are doing.
+ */
+{}
+{
+  <IF> "(" Expression() ")" Statement() [ LOOKAHEAD(1) <ELSE> Statement() ]
+}
+
+/*不考虑任何形式的表达式*/
+ASTExp Expression() #Exp:
+{}
+{
+	SubExp() (LOOKAHEAD(2) item_oper() SubExp() )*
+	
+	{ return jjtThis; }
+}
+
+void SubExp() #void:
+{}
+{
+	SubExpLeft()
+	|"(" Expression() ")"
+}
+
+void SubExpLeft() #void:
+{}
+{
+	LOOKAHEAD(2) item_const()
+	|LOOKAHEAD(2) item_var()
+	|LOOKAHEAD(2) ExpFunc()
+	|LOOKAHEAD(2) ExpProp()
+}
+
+/*条件表达式，他只有and or 操作,三元操作
+ASTExpCond ExpCond() #ExpCond :
+{}
+{
+
+	(
+		LOOKAHEAD(2) item_const()
+		|LOOKAHEAD(3) ExpFunc()
+		|
+		(
+			LOOKAHEAD(item_var() ".")
+			ExpDotList()
+			|item_var()
+		)
+	)
+	item_cond_oper() Expression()
+    
+	{ return jjtThis; }
+}
+*/
+
+
+
+
+/*
+	调用方法表达式
+*/
+void ExpFunc() #ExpFunc:
+{
+	Token t;
+}
+{
+		t=<IDENTIFIER> Arguments()
+		
+		{ jjtThis.setName(t.image);}
+}
+
+/*
+	形如 xx.xx().dfsd.asdfsadf 表达式
+
+void ExpDotList() #ExpDotList:
+{
+	Token t;
+}
+{
+	item_var() "." (LOOKAHEAD(2) Expression()|ExpProp())
+	
+}*/
+
+void ExpProp() #ExpProp:
+{
+	Token t;
+}
+{
+	t = <IDENTIFIER>
+	
+	{ jjtThis.setName(t.image);}
+}
+
+void Arguments() #void:
+{}
+{
+  "(" [ ArgumentList() ] ")"
+}
+
+void ArgumentList() :
+{}
+{
+  Expression() ( "," Expression() )*
+}
+
+void item_var() #Var(0):
+{
+	Token t;
+}
+{
+	"@" t=<IDENTIFIER> { jjtThis.setName("@"+t.image);}
+	| t=<USER> { jjtThis.setName(t.image);}
+	| t=<ROLE> { jjtThis.setName(t.image);}
+	| t=<ORG_UNIT> { jjtThis.setName(t.image);}
+}
+
+void item_cond_oper() #OperCond:
+{
+	Token t;
+}
+{
+	t=<AND>{jjtThis.setOperStr(t.image);}
+	| t=<OR>{jjtThis.setOperStr(t.image);}
+}
+
+void item_oper() #Oper:
+{
+	Token t;
+}
+{
+	t=<AND>{jjtThis.setOperStr(t.image);}
+	| t=<OR>{jjtThis.setOperStr(t.image);}
+	
+	| t=<ASSIGN>{jjtThis.setOperStr(t.image);}
+	| t=<GT>{jjtThis.setOperStr(t.image);}
+	| t=<LT>{jjtThis.setOperStr(t.image);}
+
+	| t=<EQ>{jjtThis.setOperStr(t.image);}
+	| t=<LE>{jjtThis.setOperStr(t.image);}
+	| t=<GE>{jjtThis.setOperStr(t.image);}
+	| t=<NE>{jjtThis.setOperStr(t.image);}
+	| t=<SC_OR>{jjtThis.setOperStr(t.image);}
+	| t=<SC_AND>{jjtThis.setOperStr(t.image);}
+	| t=<PLUS>{jjtThis.setOperStr(t.image);}
+	| t=<MINUS>{jjtThis.setOperStr(t.image);}
+	| t=<STAR>{jjtThis.setOperStr(t.image);}
+	| t=<SLASH>{jjtThis.setOperStr(t.image);}
+	| t=<BIT_AND>{jjtThis.setOperStr(t.image);}
+	| t=<BIT_OR>{jjtThis.setOperStr(t.image);}
+	| t=<REM>{jjtThis.setOperStr(t.image);}
+	| t=<DOT>{jjtThis.setOperStr(t.image);}
+}
+
+void item_const() #Const:
+{
+	Token t;
+}
+{
+	t=<TRUE>{jjtThis.setLiteralValue(ASTConst.LiteralType.BOOL,t.image);}
+	|t=<FALSE>{jjtThis.setLiteralValue(ASTConst.LiteralType.BOOL,t.image);}
+	|t = <INTEGER_LITERAL>{jjtThis.setLiteralValue(ASTConst.LiteralType.INTEGER,t.image);}
+	| t = <FLOATING_POINT_LITERAL>{jjtThis.setLiteralValue(ASTConst.LiteralType.FLOAT,t.image);}
+	| t = <CHARACTER_LITERAL>{jjtThis.setLiteralValue(ASTConst.LiteralType.CHAR,t.image);}
+	| t = <STRING_LITERAL>{jjtThis.setLiteralValue(ASTConst.LiteralType.STR,t.image);}
+	| t = <NULL>{jjtThis.setLiteralValue(ASTConst.LiteralType.NULL,t.image);}
+}

@@ -1,0 +1,9 @@
+@app_user
+
+select user where getRole("dept_mgr").users and belongto_orgunit=@app_user.belongto_orgunit
+select user where user_id=@val
+select user where 
+@app_user.belongto_orgunit.
+
+include user=1,3,4 
+exclude 

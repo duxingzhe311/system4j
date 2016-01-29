@@ -1,0 +1,97 @@
+<style type="text/css">
+#ListHeaderTable{
+	position: absolute;
+}
+.ListViewHeader{
+background: #B0C4DE url(LookOut/Normal/tool-bkgd.jpg) repeat-x;
+border-right: 2px groove;
+cursor: default;
+display: inline;
+font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+font-size: 8pt;
+height: 20px;
+line-height: 20px;
+margin-bottom: 1px;
+overflow: hidden;
+padding-left: 2px;
+position: absolute;
+top: 0px;
+text-align: left;
+text-overflow: ellipsis;
+vertical-align: middle;
+white-space: nowrap;
+-moz-user-select: none;
+}
+.ListViewDivider{
+border: 0px none;
+cursor: e-resize;
+height: 20px;
+overflow: hidden;
+position: absolute;
+top: 0px;
+width:5px;
+z-index: 5;
+-moz-user-select: none;
+}
+.ListViewHeaderContainer{
+background: #B0C4DE url(LookOut/Normal/tool-bkgd.jpg) repeat-x;
+border-bottom:1px outset;
+height: 20px;
+line-height: 20px;
+overflow: hidden;
+position: relative;
+vertical-align: middle;
+z-index: 1;
+-moz-user-select: none;
+}
+.ListViewHeaderContainer span{
+_padding-top:3px !important;
+_top: 10%;
+position: relative;
+-moz-user-select: none;
+}
+.ListViewHeaderContainer img{
+vertical-align: middle;
+_vertical-align: text-bottom;
+-moz-user-select: none;
+}
+#ImgSpan{
+	cursor: default;
+	width: 16px;
+	overflow: hidden;
+}
+#ImgDrag{
+	cursor: default;
+}
+body{
+overflow: auto;
+margin: 0px;
+padding: 0px;
+}
+
+#closeSearch{
+	float: right;
+}
+form{
+	margin: 0px;
+	padding: 0px;
+}
+</style>
+
+<div class="ListViewHeaderContainer" width="100%">
+<div id="ListHeaderTable" style="display:block;width:100%;">
+		<div class="ListViewHeader" id="ImgSpan" style="width:16px;">&nbsp;</div>
+		<div class="ListViewHeader" id="EmailSpan" onclick="changeSortOrder('From');" onmouseup="dropElement();" nowrap="nowrap"><span>邮件地址</span></div>
+		<div class="ListViewHeader" id="SubjectSpan" onclick="changeSortOrder('Subject');" onmouseup="dropElement();" nowrap="nowrap"><span>主题</span></div>
+		<div class="ListViewHeader" id="DateSpan" onclick="changeSortOrder('Date');" onmouseup="dropElement();" nowrap="nowrap"><span>日期</span></div>
+		<div class="ListViewHeader" id="SizeSpan" onclick="changeSortOrder('Size');" onmouseup="dropElement();" nowrap="nowrap"><span>大小</span></div>
+</div>
+</div>
+<div id="ImgDrag" class="ListViewDivider" onmouseup="dropElement();"></div>
+<div id="EmailDrag" class="ListViewDivider" onmousedown="grabElement(event, 'EmailSpan');" onmouseup="dropElement();"></div>
+<div id="SubjectDrag" class="ListViewDivider" onmousedown="grabElement(event, 'SubjectSpan');" onmouseup="dropElement();"></div>
+<div id="DateDrag" class="ListViewDivider" onmousedown="grabElement(event, 'DateSpan');" onmouseup="dropElement();"></div>
+<div id="SizeDrag" class="ListViewDivider" onmousedown="grabElement(event, 'SizeSpan');" onmouseup="dropElement();"></div>
+<iframe name="List" id="List" style="height:100%;width: 100%;border:0px none;overflow: auto;" src="/WorldClient.dll?Session=KNDGBZW&amp;View=Blank" frameborder="0">
+
+</iframe>

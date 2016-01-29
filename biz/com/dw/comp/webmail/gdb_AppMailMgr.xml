@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Gdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://jasonzhu/db_xml_conf.xsd">
+	
+	<Var name="#MailState.recved_new" value="0"/>
+	<Var name="#MailState.recved_seen" value="1"/>
+	<Var name="#MailState.sending" value="2"/>
+	<Var name="#MailState.sent" value="3"/>
+	<Var name="#MailState.sent_error" value="4"/>
+	<Var name="#MailState.draft" value="5"/>
+	<Var name="#MailState.delete" value="6"/>
+	<Var name="#MailState.delete_hidden" value="7"/>
+
+	<!-- XORM定义了名称之后,里面隐藏了如下变量
+		#xxx.all_cols //所有的列(包含主键和xorm_ext列)
+		#xxx.pk_col //主键列
+		#xxx.nor_cols //普通列(不包含主键和xorm_ext列的has_col=true列)
+		#xxx.pk_nor_cols //主键列和普通列
+		#xxx.table_name //表名称
+		除了这些变量之外,如果要做更复杂的sql,则必须知道XORM相关类的定义
+		如更新部分的普通列等.
+	-->
+	
+	<XORM name="#WebMailItem" class="com.dw.comp.webmail.WebMailItem" />
+	<XORM name="#WebMailAppMap" class="com.dw.comp.webmail.WebMailAppMap" />
+	<XORM name="#WebMailUserLog" class="com.dw.comp.webmail.WebMailUserLog" />
+	<XORM name="#WebMailAddr" class="com.dw.comp.webmail.WebMailAddrItem" />
+	<XORM name="#WebMailUserProfile" class="com.dw.comp.webmail.WebMailUserProfile" />
+	
+
+	<Install_For_DB table_names="">
+
+	</Install_For_DB>
+	<Install_For_DB db_type="mysql">
+
+	</Install_For_DB>
+	<Install_For_DB db_type="sqlserver">
+
+	</Install_For_DB>
+
+	<Module name="AppMail" desc="">
+		<!--根据输入的条件获得进程表中的垫付费用记录信息-->
+		
+		
+		<Func name="CheckMsgUid" desc="">			
+			<InParam name="@MsgUid"/>
+			<InParam name="@UserName"/>
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select MsgUid from #WebMailItem.table_name where UserName=[@UserName] and MsgUid=[@MsgUid]
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="GetMailByState" desc="">
+			<InParam name="$Subject" nullable="true" />
+			<InParam name="$To" nullable="true" />
+			<InParam name="$From" nullable="true" />
+			<InParam name="@UserName" type="String" />
+			<InParam name="@MailState" type="Int32" />
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select #WebMailItem.pk_nor_cols from
+					#WebMailItem.table_name where UserName=[@UserName] {and MailFrom like '%[$From]%'}{ and MailTo like '%[$To]%'}{ and MailSubject like '%[$Subject]%'}  and MailState=[@MailState]  order by MailDate desc
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="GetUserMailNumByState" desc="">
+			<InParam name="@UserName" type="String" nullable="true"/>
+			<InParam name="@MailState" type="Int32" />
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select UserName,count(*) as Num from
+					#WebMailItem.table_name where MailState=[@MailState]{ and UserName=[@UserName]} group by UserName
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="GetMailByUser" desc="">
+			<InParam name="$Subject" nullable="true" />
+			<InParam name="$To" nullable="true" />
+			<InParam name="$From" nullable="true" />
+			<InParam name="@StartDate" type="DateTime" nullable="true"/>
+			<InParam name="@EndDate" type="DateTime" nullable="true"/>
+			<InParam name="@UserName" type="String" />
+			<InParam name="$MailState" nullable="true"/>
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select #WebMailItem.all_cols from 
+					#WebMailItem.table_name where UserName=[@UserName] { and MailTo like '%[$To]%'}{ and MailDate&lt;=[@EndDate]}{ and MailDate&gt;=[@StartDate]}{ and MailSubject like '%[$Subject]%'}{ and MailFrom like '%[$From]%'}{ and MailState in ([$MailState])} order by MailDate desc
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		<Func name="GetMailMaxDateByUser" desc="根据用户获得对应类型的邮件的最大时间值,该方法用来给自动获得邮件做时间依据">
+			<InParam name="@UserName" type="String" />
+			<InParam name="$MailState"/>
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select max(MailDate) from 
+					#WebMailItem.table_name where UserName=[@UserName] and MailState in ([$MailState])
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="SearchMailAddr">
+			<InParam name="$SearchTxt" nullable="true" />
+			<InParam name="$MailState"/>
+			<Content_For_DB>
+				<Sql>
+					select distinct MailFrom from 
+					#WebMailItem.table_name where MailState in ([$MailState]) {and MailFrom like '%[$SearchTxt]'}
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		
+		<Func name="SearchMailAddrItem">
+			<InParam name="$SearchTxt" nullable="true" />
+			<Content_For_DB>
+				<Sql if="$SearchTxt==null||$SearchTxt==&quot;&quot;">
+					select #WebMailAddr.pk_nor_cols from 
+					#WebMailAddr.table_name
+					order by OccurNum desc
+				</Sql>
+				<Sql if="$SearchTxt!=null&amp;&amp;$SearchTxt!=&quot;&quot;">
+					select #WebMailAddr.pk_nor_cols from 
+					#WebMailAddr.table_name
+					where MailPerson like '%[$SearchTxt]' or MailUserName like '%[$SearchTxt]' or MailDomain like '%[$SearchTxt]'
+					order by OccurNum desc
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="UpdateLastRecvDateByUser_目前不需要" desc="根据用户获得该用户上一次接收邮件的时间">
+			<InParam name="@UserName" type="String" />
+			<InParam name="@InputDate" type="DateTime" />
+			<Content_For_DB>
+				<Sql exe_type="select" set_param="@AutoId=(0,0)">
+					select AutoId from #WebMailUserLog.table_name where UserName=[@UserName]
+				</Sql>
+				<Sql exe_type="update" if="@UserId!=null">
+					update #WebMailUserLog.table_name set LastRecvDate=[@InputDate] where AutoId=[@AutoId]
+				</Sql>
+				<Sql exe_type="insert" if="@UserId==null">
+					insert #WebMailUserLog.table_name (UserName,LastRecvDate) where UserName=[@UserName]
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="GetMailCountByUser" desc="根据用户该用户的未看邮件">
+			<InParam name="@UserName" type="String" />
+			<InParam name="@MailState" type="Int32"/>
+			<Content_For_DB>
+				<Sql exe_type="select">
+			select count(*) from #WebMailItem.table_name where UserName=[@UserName] and MailState=[@MailState]
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		<Func name="GetMailByMap" desc="">
+			<InParam name="@StartDate" type="DateTime" nullable="true"/>
+			<InParam name="@EndDate" type="DateTime" nullable="true"/>
+			<InParam name="$Subject" nullable="true" />
+			<InParam name="$To" nullable="true" />
+			<InParam name="$From" nullable="true" />
+			<InParam name="@MailApp"/>
+			<InParam name="@MailAppRef"/>
+			<InParam name="@UserName" type="String" />
+			<InParam name="@MailState" type="Int32" />
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select a.* from 
+					#WebMailItem.table_name a,#WebMailAppMap.table_name b where { a.MailDate&lt;=[@EndDate] and }{ a.MailDate&gt;=[@StartDate] and }{ a.MailFrom like '%[$From]%' and }{ a.MailTo like '%[$To]%' and }{ a.MailSubject like '%[$Subject]%' and } { a.UserName=[@UserName] and } a.MailId=b.MailId and b.MailApp=[@MailApp] and b.MailAppRef=[@MailAppRef] and a.MailState=[@MailState] order by a.MailDate desc
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="GetMailByNameRef" desc="">
+			<InParam name="@MailId"/>
+			<InParam name="@MailAppName"/>
+			<InParam name="@MailAppRef"/>
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select #WebMailAppMap.pk_nor_cols from 
+					#WebMailAppMap.table_name where MailId=[@MailId] and MailApp=[@MailAppName] and MailAppRef=[@MailAppRef]
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<!-- 根据开始日期和结束日期获得邮件列表 -->
+		<Func name="GetMailByDate" desc="">
+			<InParam name="@StartDate" type="DateTime" />
+			<InParam name="@EndDate" type="DateTime" />
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select #WebMailItem.pk_nor_cols from
+					#WebMailItem.table_name where MailDate&lt;=[@EndDate] and MailDate&gt;=[@StartDate] 
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="GetMailByMailIds" desc="">
+			<InParam name="$MaidIds"/>
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select #WebMailItem.pk_nor_cols from
+					#WebMailItem.table_name where MailId in ([$MailIds])
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="GetMailByInOut" desc="">			
+			<InParam name="@MailApp"/>
+			<InParam name="@MailAppRef"/>			
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select a.* from 
+					#WebMailItem.table_name a,#WebMailAppMap.table_name b where b.MailApp=[@MailApp] and b.MailAppRef=[@MailAppRef] and a.MailId=b.MailId and (a.MailState=1 or a.MailState=3) order by a.MailDate desc
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="UpdateMailStateByMailIds" desc="">			
+			<InParam name="$MailIds"/>
+			<InParam name="@MailState" type="Int32"/>
+			<InParam name="@OldMailState" type="Int32"/>
+			<InParam name="@UserName" nullable="true"/>
+			<InParam name="@MailBeforeDelState" type="Int32"/>
+			<Content_For_DB>
+				<Sql>
+					update #WebMailItem.table_name set MailState=[@MailState],MailBeforeDelState=[@MailBeforeDelState] where MailId in ([$MailIds]) { and UserName=[@UserName]}
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="RecoverDeletedByMailIds" desc="">			
+			<InParam name="$MailIds"/>
+			<InParam name="@UserName" nullable="true"/>
+			<InParam name="@DelMailSt" type="Int32"/>
+			<Content_For_DB>
+				<Sql>
+					update #WebMailItem.table_name set MailState=MailBeforeDelState where MailId in ([$MailIds]) and MailState=[@DelMailSt] and MailBeforeDelState&gt;=0{ and UserName=[@UserName]}
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="UpdateDeletedToHiddenBeforeDay" desc="用来做已经删除邮件的清理,把指定某一时间之前的已经删除的邮件进行删除隐藏">
+			<InParam name="@BeforeDay" type="DateTime"/>
+			<Content_For_DB>
+				<Sql exe_type="update">
+					update #WebMailItem.table_name set MailState=#MailState.delete_hidden where MailDate&lt;[@BeforeDay] and MailState=#MailState.delete
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="ListDelHiddenBeforeDayMailIds">
+			<InParam name="@BeforeDay" type="DateTime"/>
+			<InParam name="@UserName"/>
+			<Content_For_DB>
+				<Sql>
+					select MailId from #WebMailItem.table_name
+					where UserName=[@UserName] and MailDate&lt;[@BeforeDay] and MailState=#MailState.delete_hidden
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="ListHasDelHiddenBeforeDayUserNames">
+			<InParam name="@BeforeDay" type="DateTime"/>
+			
+			<Content_For_DB>
+				<Sql>
+					select distinct UserName from #WebMailItem.table_name
+					where MailDate&lt;[@BeforeDay] and MailState=#MailState.delete_hidden
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="DeleteMailStateByMailIds" desc="">			
+			<InParam name="$MailIds"/>
+			<InParam name="@UserName" nullable="true"/>
+			<Content_For_DB>
+				<Sql>
+					delete from #WebMailItem.table_name where MailId in ([$MailIds]){ and UserName=[@UserName]}
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="SetRemoveByClientByMailIds" desc="">			
+			<InParam name="$MailIds"/>
+			<InParam name="@UserName" nullable="true"/>
+			<InParam name="@RemovedByClient" type="boolean"/>
+			<Content_For_DB>
+				<Sql>
+					update #WebMailItem.table_name set RemovedByClient=[@RemovedByClient] where MailId in ([$MailIds]){ and UserName=[@UserName]}
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="SearchMail" desc="">
+			<InParam name="@UserName" type="String"  nullable="true"/>
+			<InParam name="$Text" type="String" />
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select #WebMailItem.pk_nor_cols from 
+					#WebMailItem.table_name where { UserName=[@UserName] and }( MailSubject like '%[$Text]%' or MailTo like '%[$Text]%' or MailFrom like '%[$Text]%')  and MailState&lt;=3 order by MailDate desc
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="SearchMailPro" desc="">
+			<InParam name="@UserName" type="String"  nullable="true"/>
+			<InParam name="$title" type="String" nullable="true"/>
+			<InParam name="$sender" type="String" nullable="true"/>
+			<InParam name="$recver" type="String" nullable="true"/>
+			<InParam name="$StateStr"/>
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select #WebMailItem.pk_nor_cols from 
+					#WebMailItem.table_name where 1=1 { and UserName=[@UserName]}{ and MailSubject like '%[$title]%'}{ and MailTo like '%[$recver]%'}{ and MailFrom like '%[$sender]%'} and MailState in ([$StateStr]) order by MailDate desc
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<!-- 获得所有邮件 -->
+		<Func name="GetMailsByAddress" desc="">		
+			<InParam name="$address" type="String" />	
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select #WebMailItem.pk_nor_cols from 
+					#WebMailItem.table_name where MailFrom like '[$address]%' or MailTo like '[$address]%' or MailCc like '[$address]%' or MailBcc like '[$address]%' order by MailFrom desc
+				</Sql>
+			</Content_For_DB>
+		</Func>
+
+		<!-- 根据用户名称获得对应该用户所有收到邮件的发件人 -->
+		<Func name="GetRecvedMailFromByUserName" desc="">		
+			<InParam name="@UserName" type="String"/>
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select distinct MailFrom from webmail where username=[@UserName] and MailState in (0,1) order by MailFrom
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<!-- 根据用户名称获得对应该用户所有发出邮件的发件人 -->
+		<Func name="GetSentMailToByUserName" desc="">		
+			<InParam name="@UserName" type="String"/>
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select distinct MailTo from webmail where username=[@UserName] and MailState=3 order by MailFrom
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="ListMailIds" desc="">		
+			<InParam name="@UserName" type="String"/>
+			<InParam name="$MailState"/>
+			<Content_For_DB>
+				<Sql>
+					select MailId from 
+					#WebMailItem.table_name where UserName=[@UserName] and MailState in ([$MailState])
+					ORDER BY MailDate ASC
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		<Func name="ListMailIds_CheckClient" desc="">		
+			<InParam name="@UserName" type="String"/>
+			<InParam name="$MailState"/>
+			<Content_For_DB>
+				<Sql>
+					select MailId from 
+					#WebMailItem.table_name where UserName=[@UserName] and MailState in ([$MailState]) and RemovedByClient=0
+					ORDER BY MailDate ASC
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+	</Module>
+
+</Gdb>

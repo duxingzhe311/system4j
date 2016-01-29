@@ -1,0 +1,46 @@
+<select id="so_lvl1_[#id#]" onchange="so_[#id#]_sel_lvl()">
+[#lvl1_options#]
+</select>
+<select name="[#name#]" id="[#id#]" onchange="[#on_change#]">
+[#lvl2_options#]
+</select>
+<script language="javascript">
+<!--
+function getLvl2Ids_[#id#](idx)
+{
+    switch(idx)
+    {
+[#get_ids_by_lvl1_id#]
+    }
+    return null;
+}
+
+function getLvl2Names_[#id#](idx)
+{
+    switch(idx)
+    {
+[#get_names_by_lvl1_id#]
+    }
+    return null ;
+}
+
+function so_[#id#]_sel_lvl()
+{
+	var v1 = document.getElementById('so_lvl1_[#id#]').value ;
+	v1 = parseInt(v1) ;
+	var s2 = document.getElementById('[#id#]') ;
+	var count=s2.options.length;
+    for(i=count-1;i>=0;i--)
+    	s2.remove(i);
+    
+    var ids = getLvl2Ids_[#id#](v1) ;
+    if(ids==null||ids.length<=0)
+    	return ;
+    var ns = getLvl2Names_[#id#](v1) ;
+    
+    var len = ids.length ;
+    for(i = 0 ; i < len ; i ++)
+    	s2.options.add(new Option(ns[i],ids[i]));
+}
+//-->
+</script>

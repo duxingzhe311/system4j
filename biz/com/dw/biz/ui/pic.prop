@@ -1,0 +1,10 @@
+bizViewIcon=pic_v.gif
+bizInnerViewIcon=pic_vi.gif
+bizInnerActIcon = pic_ai.gif
+route_diagram=go.gif
+bizActionIcon = pic_a.gif
+bizFlowIcon = pic_fl.gif
+
+bizEndNodeIcon = pie0.gif
+bizStartNodeIcon = elite.gif
+bizNodePerformerIcon = impl_no.gif

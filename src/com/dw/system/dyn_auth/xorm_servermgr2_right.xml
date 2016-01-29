@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Gdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://jasonzhu/db_xml_conf.xsd">
+	
+	<!-- XORM定义了名称之后,里面隐藏了如下变量
+		#xxx.all_cols //所有的列(包含主键和xorm_ext列)
+		#xxx.pk_col //主键列
+		#xxx.nor_cols //普通列(不包含主键和xorm_ext列的has_col=true列)
+		#xxx.pk_nor_cols //主键列和普通列
+		#xxx.table_name //表名称
+		除了这些变量之外,如果要做更复杂的sql,则必须知道XORM相关类的定义
+		如更新部分的普通列等.
+	-->
+	<XORM name="#MgrNodeRightRoleItem" class="com.dw.system.dyn_auth.MgrNodeRightRoleItem" />
+	
+<Module name="MgrNodeRightRole" desc="">
+		<Func name="getItemByMgrNodeId" desc="">
+			<InParam name="@MgrNodeId"  />
+			
+			<Content_For_DB>
+				<Sql exe_type="select">
+					select #MgrNodeRightRoleItem.pk_nor_cols from #MgrNodeRightRoleItem.table_name
+					where MgrNodeId=[@MgrNodeId]
+				</Sql>
+			</Content_For_DB>
+		</Func>
+	</Module>
+
+</Gdb>

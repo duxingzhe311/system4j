@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Gdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://jasonzhu/db_xml_conf.xsd">
+  <XORM name="#FlowIns" class="com.dw.biz.flow_ins.BizFlowInsContext"/>
+  <XORM name="#FlowInsDfIdx" class="com.dw.biz.flow_ins.BizFlowInsDfIdxItem"/>
+  <!-- XORM name="#FlowAct" class="com.dw.biz.flow_ins.BizActInsContext"/ -->
+  
+  <Module name="BizFlowIns" desc="">
+    <Func name="ListFlowIns" desc="">
+      <InParam name="@FlowPath" />
+      <InParam name="@InsState" type="Int32"/>
+      <Content_For_DB >
+        <Sql exe_type="select">
+          select #FlowIns.pk_nor_cols from #FlowIns.table_name where 1=1{ and FlowPath=[@FlowPath]}{ and InsState=[@InsState]}
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <!-- 
+    <Func name="ListFlowInsByCreator" desc="">
+      <InParam name="@FlowPath" nullable="true"/>
+      <InParam name="@UserName"/>
+      <InParam name="@InsState" type="Int32"/>
+      <Content_For_DB >
+        <Sql>
+          select #FlowIns.pk_nor_cols from #FlowIns.table_name where CreationUser=[@UserName]{ and FlowPath=[@FlowPath]}{ and InsState=[@InsState]}
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    <Func name="ListFlowInsByRelatedUser" desc="">
+      <InParam name="@FlowPath" nullable="true"/>
+      <InParam name="@UserName"/>
+      <InParam name="@InsState" type="Int32"/>
+      <Content_For_DB >
+        <Sql>
+          select #FlowIns.pk_nor_cols from #FlowIns.table_name where CreationUser=[@UserName]{ and FlowPath=[@FlowPath]}{ and InsState=[@InsState]}
+        </Sql>
+      </Content_For_DB>
+    </Func>
+     -->
+    <Func name="ChangeFlowInsSt" desc="">
+      <InParam name="@FlowInsId" type="Int64"/>
+      <InParam name="@InsState" type="Int32"/>
+      <Content_For_DB >
+        <Sql exe_type="update">
+          update #FlowIns.table_name set InsState=[@InsState] where FlowInsId=[@FlowInsId]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    
+    <Func name="ListUserRelatedInsCxt" desc="获得用户相关的流程实例上下文,它结合workitem">
+      <InParam name="@UserName"/>
+      <InParam name="@InsState" type="Int32" nullable="true"/>
+      <Content_For_DB >
+        <Sql exe_type="select">
+        	select distinct wi.FlowInsId,fi.FlowPath,fi.Title,fi.CreationUser,fi.CreationDate,fi.StartDate,fi.CloseDate,fi.InsState
+        	 from biz_workitem wi
+        		right join #FlowIns.table_name fi on wi.FlowInsId=fi.FlowInsId
+        	where wi.AssignedUser=[@UserName] and fi.CreationUser!=[@UserName]{ and fi.InsState=[@InsState]}
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    
+    <Func name="ListUserCreatedInsCxt" desc="获得用户相关的流程实例上下文,它结合workitem">
+      <InParam name="@UserName"/>
+      <InParam name="@InsState" type="Int32" nullable="true"/>
+      <Content_For_DB >
+        <Sql exe_type="select">
+        	select FlowInsId,FlowPath,Title,CreationUser,CreationDate,StartDate,CloseDate,InsState
+        	 from #FlowIns.table_name
+        	where CreationUser=[@UserName]{ and InsState=[@InsState]}
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    
+    
+    <Func name="ListInsCxtByPathAndIdx">
+      <InParam name="@FlowPath"/>
+      <InParam name="@DfName"/>
+      <InParam name="@DfStrVal"/>
+      <InParam name="$InsStateStr"/>
+      <Content_For_DB >
+        <Sql>
+        	select idx.InsId,fi.FlowInsId,fi.FlowPath,fi.Title,fi.CreationUser,fi.CreationDate,fi.StartDate,fi.CloseDate,fi.InsState
+        	 from biz_flow_ins_df_idx idx inner join biz_flow_ins fi on idx.InsId=fi.FlowInsId
+        	where idx.FlowPath=[@FlowPath] and DfName=[@DfName] and DfStrVal=[@DfStrVal] and fi.InsState in ([$InsStateStr])
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    
+    <Func name="DelIdxByInsId">
+      <InParam name="@InsId" type="int64"/>
+      <Content_For_DB >
+        <Sql>
+        	delete from #FlowInsDfIdx.table_name
+        	where InsId=[@InsId]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    
+    <Func name="GetIdxByInsId">
+      <InParam name="@InsId" type="int64"/>
+      <Content_For_DB >
+        <Sql>
+        	select #FlowInsDfIdx.pk_nor_cols from #FlowInsDfIdx.table_name
+        	where InsId=[@InsId]
+        </Sql>
+      </Content_For_DB>
+    </Func>
+    
+  </Module>
+</Gdb>

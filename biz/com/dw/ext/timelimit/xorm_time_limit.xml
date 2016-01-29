@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Gdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://jasonzhu/db_xml_conf.xsd">
+	
+	<!-- XORM定义了名称之后,里面隐藏了如下变量
+		#xxx.all_cols //所有的列(包含主键和xorm_ext列)
+		#xxx.pk_col //主键列
+		#xxx.nor_cols //普通列(不包含主键和xorm_ext列的has_col=true列)
+		#xxx.pk_nor_cols //主键列和普通列
+		#xxx.table_name //表名称
+		除了这些变量之外,如果要做更复杂的sql,则必须知道XORM相关类的定义
+		如更新部分的普通列等.
+	-->
+	
+	<XORM name="#TLItem" class="com.dw.ext.timelimit.TLItem"/>
+	
+
+	<Module name="TimeLimit" desc="">	
+		<!-- 获得所有的案例时效信息 -->
+		<Func name="ListBrokenTimeLimit" desc="">
+			<InParam name="@NowDate" type="date"/>
+			<InParam name="@State" type="int32"/>
+			<InParam name="@IsFound" type="boolean"/>
+			<Content_For_DB>
+				<Sql>
+					select #TLItem.pk_nor_cols from #TLItem.table_name
+					where LimitDate&lt;[@NowDate] and State=[@State] and IsFoundBroken=[@IsFound]
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		<Func name="ListRemindTimeLimit" desc="">
+			<InParam name="@NowDate" type="date"/>
+			<InParam name="@State" type="int32"/>
+			<Content_For_DB>
+				<Sql>
+					select #TLItem.pk_nor_cols from #TLItem.table_name
+					where StartRemindDate&lt;[@NowDate] and State=[@State]
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="ListTimeLimitByMonitor" desc="">
+			<InParam name="@Monitor"/>
+			<InParam name="@IsMgr" type="int32"/>
+			<InParam name="$States"/>
+			<Content_For_DB>
+				<Sql if="@IsMgr==1">
+					select #TLItem.pk_nor_cols from #TLItem.table_name
+					where (Monitor=[@Monitor] or Monitor='' or Monitor is null) and State in ([$States])
+				</Sql>
+				<Sql if="@IsMgr!=1">
+					select #TLItem.pk_nor_cols from #TLItem.table_name
+					where Monitor=[@Monitor] and State in ([$States])
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="ListUserAppSummary" desc="">
+			<InParam name="@User"/>
+			<InParam name="$States"/>
+			<Content_For_DB>
+				<Sql>
+		select AppName,AppId,min(limitdate) as RecentLD,count(*) as TLItemNum from #TLItem.table_name
+       where (owner=[@User] or assistant=[@User]) and state in ([$States])
+       group by AppName,AppId order by RecentLD
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		
+		<Func name="ListMonitorAppSummary" desc="">
+			<InParam name="@Monitor"/>
+			<InParam name="@IsMgr" type="int32"/>
+			<InParam name="$States"/>
+			<Content_For_DB>
+				<Sql if="@IsMgr==1">
+		select AppName,AppId,min(limitdate) as RecentLD,count(*) as TLItemNum from #TLItem.table_name
+       where (Monitor=[@Monitor] or Monitor='' or Monitor is null) and state in ([$States])
+       group by AppName,AppId order by RecentLD
+				</Sql>
+				<Sql if="@IsMgr!=1">
+		select AppName,AppId,min(limitdate) as RecentLD,count(*) as TLItemNum from #TLItem.table_name
+       where Monitor=[@Monitor] and state in ([$States])
+       group by AppName,AppId order by RecentLD
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="ListTimeLimitByUserAppId" desc="">
+			<InParam name="@AppName"/>
+			<InParam name="@AppId"/>
+			<InParam name="@User"/>
+			<InParam name="$States"/>
+			<Content_For_DB>
+				<Sql>
+		select #TLItem.pk_nor_cols from #TLItem.table_name
+       where AppName=[@AppName] and AppId=[@AppId] and (owner=[@User] or assistant=[@User]) and state in ([$States])
+       order by LimitDate
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		
+		<Func name="ListTimeLimitByMonitorAppId" desc="">
+			<InParam name="@AppName"/>
+			<InParam name="@AppId"/>
+			<InParam name="@Monitor"/>
+			<InParam name="@IsMgr" type="int32"/>
+			<InParam name="$States"/>
+			<Content_For_DB>
+				<Sql if="@IsMgr==1">
+		select #TLItem.pk_nor_cols from #TLItem.table_name
+       where AppName=[@AppName] and AppId=[@AppId] and (Monitor=[@Monitor] or Monitor='' or Monitor is null) and state in ([$States])
+       order by LimitDate
+				</Sql>
+				<Sql if="@IsMgr!=1">
+		select #TLItem.pk_nor_cols from #TLItem.table_name
+       where AppName=[@AppName] and AppId=[@AppId] and Monitor=[@Monitor] and state in ([$States])
+       order by LimitDate
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		<Func name="ListTimeLimitByTag" desc="">
+			<InParam name="@AppName"/>
+			<InParam name="@PlugType" nullable="true"/>
+			<InParam name="@AppTag"/>
+			<InParam name="@AppId"/>
+			<Content_For_DB>
+				<Sql if="@PlugType==null||@PlugType==&quot;&quot;">
+					select #TLItem.pk_nor_cols from #TLItem.table_name
+					where AppName=[@AppName] and (PlugType='' or PlugType is null)
+						and AppId=[@AppId] and AppTag=[@AppTag]
+				</Sql>
+				<Sql if="@PlugType!=null&amp;&amp;@PlugType!=&quot;&quot;">
+					select #TLItem.pk_nor_cols from #TLItem.table_name
+					where AppName=[@AppName] and PlugType=[@PlugType]
+						and AppId=[@AppId] and AppTag=[@AppTag]
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="ListTimeLimitByAppAndState" desc="">
+			<InParam name="@AppName"/>
+			<InParam name="$States"/>
+			<Content_For_DB>
+				<Sql>
+					select #TLItem.pk_nor_cols from #TLItem.table_name
+					where AppName=[@AppName] and State in ([$States])
+				</Sql>
+			</Content_For_DB>
+		</Func>
+		
+		<Func name="finishTimeLimit" desc="">
+			<InParam name="@LpId" type="Int64"/>
+			<InParam name="@FinishDate" type="DateTime"/>
+			<InParam name="@FinishDesc" nullable="true"/>
+			<InParam name="@State" type="Int32" />
+			<Content_For_DB>
+				<Sql exe_type="update">
+					update #CaseTimeLimitPoint.table_name set FinishDate=[@FinishDate],FinishDesc=[@FinishDesc],State=[@State]
+					where LpId=[@LpId]
+				</Sql>
+			</Content_For_DB>
+		</Func>
+	</Module>
+
+</Gdb>

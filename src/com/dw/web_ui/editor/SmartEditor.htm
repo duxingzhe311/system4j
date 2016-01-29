@@ -1,0 +1,81 @@
+<table border='0' cellpadding='0' cellspacing='0' width='100%' height0='100%' style='width: 100%; font-size: 10pt;margin-left: 0;margin-top: 0'>
+<tr style='border-bottom: 1px solid rgb(104, 104, 104); background-image: url(WebRes?r=com/dw/web_ui/res/tool-bkgd.jpg);' height='30'>
+<td colspan='30'>
+<textarea id='[#nid#]' style='display:none'>
+[#toolbar_cont#]
+</textarea>
+<div id='[#qid#]'></div>
+<script>f23('toolbar',[#nid#].value,'[#qid#]')</script>
+</td></tr>
+</table>
+<script>
+xinha_editors=null;
+xinha_init=null;
+xinha_config=null;
+xinha_plugins=null;
+xinha_init=xinha_init?xinha_init:function(){
+xinha_editors=xinha_editors?xinha_editors:["[#id_name#]","anotherOne"];
+xinha_plugins=xinha_plugins?xinha_plugins:["CharacterMap","ContextMenu","ListType","Stylist","Linker","FindReplace","SuperClean","TableOperations","Template"];
+//xinha_plugins=xinha_plugins?xinha_plugins:["CharacterMap","ContextMenu","ListType","Stylist","SuperClean","TableOperations"];
+if(!Xinha.loadPlugins(xinha_plugins,xinha_init)){
+return;
+}
+xinha_config=xinha_config?xinha_config():new Xinha.Config();
+xinha_config.pageStyleSheets=[_editor_url+"examples/full_example.css"];
+xinha_config.mozParaHandler='built-in';
+xinha_editors=Xinha.makeEditors(xinha_editors,xinha_config,xinha_plugins);
+Xinha.startEditors(xinha_editors);
+};
+Xinha._addEvent(window,"load",xinha_init);
+
+function submit_[#edit_id#]()
+{
+	var f = document.getElementById('[#form_id#]') ;
+	var sendstr = '' ;
+	//Xinha._doc.execCommand("htmlmode");
+	//Xinha.getHTML();//
+	var cv = xinha_editors.[#id_name#].getHTML();
+	sendstr += '[#id_name#]='+utf8UrlEncode(cv) ;
+	var inputs = f.getElementsByTagName('input') ;
+	var i,n,v;
+	if(inputs!=null)
+	{
+		for(i = 0 ; i < inputs.length ; i ++)
+		{
+			n = inputs[i].name ;
+			v = inputs[i].value ;
+			if(v==null)
+				continue ;
+			sendstr += ('&'+n+'='+utf8UrlEncode(v)) ;
+		}
+	}
+	sendWithResCallback('[#submit_url#]',sendstr,submit_[#edit_id#]_cb,true) ;
+}
+
+function submit_[#edit_id#]_cb(bsucc,ret)
+{
+	if(!bsucc)
+	{
+		alert(ret) ;
+		return ;
+	}
+	
+	ret = trim(ret) ;
+	if(ret!='')
+	{
+		alert(ret) ;
+	}
+}
+
+function print_[#edit_id#]()
+{
+	xinha_editors.[#id_name#]._doc.parentWindow.print();
+}
+</script>
+<form id="[#form_id#]" name="[#form_id#]" action="[#submit_url#]" method="post" >
+<textarea id="[#id_name#]" name="[#id_name#]" rows="[#rows#]" cols="50" style="width: 100%">[#txt_val#]</textarea>
+[#ext_inputs#]
+</form>
+<script>
+//init_[#id_name#]();
+</script>

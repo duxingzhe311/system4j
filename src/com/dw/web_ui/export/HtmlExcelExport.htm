@@ -1,0 +1,32 @@
+<input type='button' name='[#uid#]' value='[#btntitle#]' onclick="export_to_excel_[#uid#]('[#eleid#]')" class='[#btn_cn#]'/>
+<iframe id="f_[#uid#]" name="fn_[#uid#]" frameborder="0" style="width:0;height:0" src="/system/util/excel_export.jsp"></iframe>
+<script>
+<!--
+function export_to_excel_[#uid#](eid)
+{
+	var ele = document.getElementById(eid) ;
+	if(ele==null)
+	{
+		alert("no element with id="+eid+" found!") ;
+		return ;
+	}
+	
+	var f = document.getElementById('f_[#uid#]') ;
+	
+	
+	var attrs = ele.attributes;
+    var str = "<" + ele.tagName;
+    for(var i=0; i<attrs.length; i++)
+    {
+    	if(attrs[i].value==null||attrs[i].value==''||attrs[i].value=='null')
+    		continue ;
+    	
+      	str += " " + attrs[i].name + "=\"" + attrs[i].value + "\"";
+    }
+    
+    str += ">" + ele.innerHTML + "</" + ele.tagName + ">";
+	
+	f.contentWindow.do_export('[#filename#]',str) ;
+}
+//-->
+</script>

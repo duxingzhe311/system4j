@@ -1,0 +1,96 @@
+<input id="pbtn_[#uid#]" type="button" name="pbtn_[#uid#]" value="[#btntitle#]" onclick="window.print()"/>
+<input id="pedtn_[#uid#]" type="button" style="display:'[#edit_dis#]'" name="pbedtn_[#uid#]" value="[#edit_btntitle#]" onclick="window.open('/system/util/smart_doc_editor.jsp?openerid=[#openerid#]')"/>
+<script>
+<!--
+var HKEY_Root,HKEY_Path,HKEY_Key;
+HKEY_Root="HKEY_CURRENT_USER";
+HKEY_Path="\\Software\\Microsoft\\Internet Explorer\\PageSetup\\";
+var is_print_edit = document.getElementById('pedtn_[#uid#]').style.display!='none' ;
+//ÉèÖÃÍøÒ³´òÓ¡µÄÒ³Ã¼Ò³½ÅÎª¿Õ
+function PageSetup_Null()
+{
+	try
+	{
+		var Wsh=new ActiveXObject("WScript.Shell");
+		HKEY_Key="header";
+		Wsh.RegWrite(HKEY_Root+HKEY_Path+HKEY_Key,"");
+		HKEY_Key="footer";
+		Wsh.RegWrite(HKEY_Root+HKEY_Path+HKEY_Key,"");
+	}
+	catch(e)
+	{
+		//alert(e.message) ;
+	}
+}
+
+
+//ÉèÖÃÍøÒ³´òÓ¡µÄÒ³Ã¼Ò³½ÅÎªÄ¬ÈÏÖµ
+function PageSetup_Default()
+{
+	try
+	{
+		var Wsh=new ActiveXObject("WScript.Shell");
+		HKEY_Key="header";
+		Wsh.RegWrite(HKEY_Root+HKEY_Path+HKEY_Key,"&w&bÒ³Âë,&p/&P");
+		HKEY_Key="footer";
+		Wsh.RegWrite(HKEY_Root+HKEY_Path+HKEY_Key,"&u&b&d");
+	}
+	catch(e){}
+}
+
+var p_hidden_ids_[#uid#] = new Array([#hidden_ids#]) ;
+function window.onbeforeprint()
+{
+    document.getElementById('pbtn_[#uid#]').style.display='none' ;
+    if(is_print_edit)
+    	document.getElementById('pedtn_[#uid#]').style.display='none' ;
+    var i,s,o ;
+    s = p_hidden_ids_[#uid#].length ;
+    for(i = 0 ; i < s ; i ++)
+    {
+    	o = document.getElementById(p_hidden_ids_[#uid#][i]) ;
+    	if(o)
+    		o.style.display='none' ;
+    }
+}
+
+function window.onafterprint()
+{
+	document.getElementById('pbtn_[#uid#]').style.display='' ;
+	if(is_print_edit)
+		document.getElementById('pedtn_[#uid#]').style.display='' ;
+	var i,s,o ;
+    s = p_hidden_ids_[#uid#].length ;
+    for(i = 0 ; i < s ; i ++)
+    {
+    	o = document.getElementById(p_hidden_ids_[#uid#][i]) ;
+    	if(o)
+    		o.style.display='' ;
+    }
+}
+
+function printsetup()
+{
+	wb.execwb(8,1);
+}
+function printpreview()
+{
+¡¡¡¡wb.execwb(7,1);
+}
+function printit()
+{
+	//if (!confirm('È·¶¨´òÓ¡Âð£¿'))
+	//	return ;
+	wb.execwb(6,6)
+}
+
+PageSetup_Null();
+
+//-->
+</script>
+<!-- 
+<OBJECT classid="CLSID:8856F961-340A-11D0-A96B-00C04FD705A2" height=0 id=wb name=wb width=0></OBJECT>
+<input type=button name=button_print value="Print" onclick="javascript:printit()">
+<input type=button name=button_setup value="Print Setup" onclick="javascript:printsetup();">
+<input type=button name=button_show value="Print Preview" onclick="javascript:printpreview();">
+-->

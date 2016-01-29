@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Gdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://jasonzhu/db_xml_conf.xsd">
+	<XORM name="#RightRoleItem" class="com.dw.user.rightrole.RightRoleItem"></XORM>
+
+	<Module name="RightRole" desc="update">
+		<Func name="updateByNameAndRole">
+			<InParam name="@RightName"></InParam>
+			<InParam name="@RoleId"></InParam>
+			<InParam name="@HasRight"></InParam>
+			<Content_For_DB>
+				<Sql exe_type="update">
+				  update #RightRoleItem.table_name set
+				  HasRight = [@HasRight]
+				  where 
+				  RightName = [@RightName]
+				  and
+				  RoleId = [@RoleId]
+				</Sql>
+			</Content_For_DB>
+		</Func>
+	
+		<Func name="deleteByRoleId">
+			<InParam name="@RoleId"></InParam>
+			<Content_For_DB>
+				<Sql exe_type="delete">
+				  delete from #RightRoleItem.table_name
+				  where 
+				  RoleId = [@RoleId]
+				</Sql>
+			</Content_For_DB>
+		</Func>
+	</Module>
+</Gdb>
